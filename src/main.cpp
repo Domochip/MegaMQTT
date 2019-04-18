@@ -4,12 +4,16 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EEPROM.h>
+#include <ArduinoJson.h>
 
 //Ethernet variables
 byte mac[6];
 IPAddress ip(192, 168, 1, 177);
 //WebServer
 EthernetServer webServer(80);
+
+//JSON variable
+StaticJsonDocument<1024> jsonDoc;
 
 void SoftwareReset()
 {
@@ -39,13 +43,6 @@ bool EthernetConnection()
   return Ethernet.linkStatus() != LinkOFF;
 }
 
-void saveJSONtoEEPROM(const char *json)
-{
-  for (uint16_t i = 0; i < strlen(json); i++)
-    EEPROM[i] = json[i];
-  EEPROM[strlen(json)] = 0;
-}
-
 void HandleWebClient(EthernetClient &webClient)
 {
   //if it's connected
@@ -72,11 +69,11 @@ void HandleWebClient(EthernetClient &webClient)
       if (reqLine.endsWith(F(" HTTP/1.1\r")))
       {
         if (reqLine.startsWith(F("GET ")))
-          requestURI = reqLine.substring(4, reqLine.length() - 10);
+          requestURI = reqLine.substring(5, reqLine.length() - 10);
         if (reqLine.startsWith(F("POST ")))
         {
           isPOSTRequest = true;
-          requestURI = reqLine.substring(4, reqLine.length() - 10);
+          requestURI = reqLine.substring(5, reqLine.length() - 10);
         }
       }
 
@@ -119,6 +116,47 @@ void HandleWebClient(EthernetClient &webClient)
     }
 
     //-------------------Answer to the request-------------------
+    //if GET request
+    if (!isPOSTRequest)
+    {
+    }
+    else //else that is a POST request
+    {
+      //if JSON Config file POSTed
+      if (requestURI == F("/conf"))
+      {
+        //Deserialize it into jsonDoc
+        DeserializationError jsonError = deserializeJson(jsonDoc, fileContent);
+        //if deserialization succeed
+        if (!jsonError)
+        {
+          Serial.println(F("Save JSON to EEPROM"));
+
+          //Save JSON to EEPROM
+          for (uint16_t i = 0; i < fileContent.length(); i++)
+            EEPROM[i] = fileContent[i];
+          EEPROM[fileContent.length()] = 0;
+
+          //Answer to the webClient
+          webClient.println(F("HTTP/1.1 200 OK"));
+          webClient.println(F("Content-Type: text/html"));
+          webClient.println();
+          webClient.println(F("JSON Config file saved"));
+
+          Serial.println(F("Reboot"));
+          SoftwareReset();
+        }
+        else
+        {
+          webClient.println(F("HTTP/1.1 400 Bad Request"));
+          webClient.println();
+          webClient.println(F("Incorrect JSON Config file"));
+
+          //Reload JSON from EEPROM
+          //TODO
+        }
+      }
+    }
 
     //DEBUG
     Serial.print(F("Request Method : "));
