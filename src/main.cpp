@@ -75,8 +75,9 @@ void loop()
       //receive and parse his request
       bool isRequestHeaderFinished = false;
       bool isPOSTRequest = false;
-      String requestURI;      //URL requested
-      String requestBoundary; //
+      String requestURI; //URL requested
+      String requestBoundary;
+      String fileContent;
 
       while (webClient.available() && !isRequestHeaderFinished)
       {
@@ -110,12 +111,45 @@ void loop()
         if (reqLine.length() == 1 && reqLine[0] == '\r')
           isRequestHeaderFinished = true;
       }
+
+      //Try to receive file content (only for POST request)
+      bool isFileContentReceived = false;
+      if (isPOSTRequest)
+      {
+        //look for boundary
+        if (webClient.find((char *)requestBoundary.c_str()))
+        {
+          //then go to next empty line (so skip it)
+          webClient.find((char *)"\r\n\r\n");
+
+          //complete requestBoundary to find its end
+          requestBoundary = "--" + requestBoundary + '\r';
+
+          //and finally read file content until boundary end string is found
+          while (webClient.available() && !isFileContentReceived)
+          {
+            //read content line
+            String dataLine = webClient.readStringUntil('\n');
+            //if it doesn't match end of boundary
+            if (dataLine.compareTo(requestBoundary))
+              fileContent += dataLine + '\n'; //add it to fileContent with removed \n
+            else
+              isFileContentReceived = true; //else end of file content is there
+          }
+        }
+      }
+
+      //DEBUG
       Serial.print(F("Request Method : "));
       Serial.println(isPOSTRequest ? F("POST") : F("GET"));
       Serial.print(F("Request URI : "));
       Serial.println(requestURI);
       Serial.print(F("Request Boundary : "));
       Serial.println(requestBoundary);
+      Serial.print(F("Request File received : "));
+      Serial.println(isFileContentReceived ? F("YES") : F("NO"));
+      Serial.print(F("Request File content : "));
+      Serial.println(fileContent);
     }
     webClient.stop();
   }
