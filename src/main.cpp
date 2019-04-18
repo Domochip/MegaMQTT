@@ -6,6 +6,7 @@
 #include <EEPROM.h>
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
+#include <SimpleTimer.h> //!\ MAX_TIMERS = 1 /!\.
 
 #define JSON_BUFFER_MAX_SIZE 1024
 #define JSON_DOCUMENT_MAX_SIZE 1024
@@ -22,6 +23,8 @@ StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
 //MQTT variables
 EthernetClient mqttEthClient;
 PubSubClient mqttClient;
+bool needMqttReconnect = false;
+SimpleTimer mqttReconnectTimer;
 
 void SoftwareReset()
 {
@@ -269,8 +272,37 @@ void setup()
 
 void loop()
 {
+  //------------------------HOME AUTOMATION------------------------
+  
+  //------------------------WEBSERVER------------------------
   //take and check if a webClient is there
   EthernetClient webClient = webServer.available();
   if (webClient)
     HandleWebClient(webClient);
+
+  //------------------------MQTT------------------------
+  //If MQTT need to be reconnected
+  if (needMqttReconnect)
+  {
+    needMqttReconnect = false;
+    Serial.print(F("MQTT Reconnection : "));
+    if (MqttConnect())
+      Serial.println(F("OK"));
+    else
+      Serial.println(F("Failed"));
+  }
+
+  //if MQTT not connected and reconnect timer not started
+  if (!mqttClient.connected() && !mqttReconnectTimer.isEnabled(0))
+  {
+    Serial.println(F("MQTT Disconnected"));
+    //set Timer to reconnect after 20 or 60 sec (Eth connected or not)
+    mqttReconnectTimer.setTimeout((Ethernet.linkStatus() != LinkOFF) ? 20000 : 60000, []() { needMqttReconnect = true; mqttReconnectTimer.deleteTimer(0); });
+  }
+
+  //Run mqttReconnectTimer
+  mqttReconnectTimer.run();
+
+  //Run mqttClient
+  mqttClient.loop();
 }
