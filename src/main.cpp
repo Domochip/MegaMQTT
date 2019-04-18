@@ -5,6 +5,7 @@
 #include <Ethernet.h>
 #include <EEPROM.h>
 #include <ArduinoJson.h>
+#include <PubSubClient.h>
 
 #define JSON_BUFFER_MAX_SIZE 1024
 #define JSON_DOCUMENT_MAX_SIZE 1024
@@ -17,6 +18,10 @@ EthernetServer webServer(80);
 
 //JSON variable
 StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
+
+//MQTT variables
+EthernetClient mqttEthClient;
+PubSubClient mqttClient;
 
 void SoftwareReset()
 {
@@ -170,7 +175,7 @@ void HandleWebClient(EthernetClient &webClient)
           webClient.println();
           webClient.println(F("JSON Config file saved"));
 
-          delay(1); // give webClient time to receive the data
+          delay(1);         // give webClient time to receive the data
           webClient.stop(); // close the connection
 
           Serial.println(F("Reboot"));
@@ -202,6 +207,33 @@ void HandleWebClient(EthernetClient &webClient)
   }
   webClient.stop();
 }
+//------------------------------------------
+// Connect then Subscribe to MQTT
+bool MqttConnect()
+{
+  if (Ethernet.linkStatus() == LinkOFF)
+    return false;
+
+  //Generate CLientID
+  char clientID[18];
+  sprintf_P(clientID, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+  //Connect
+  if (!jsonDoc[F("MQTT")][F("username")].as<const char *>()[0])
+    mqttClient.connect(clientID);
+  else
+    mqttClient.connect(clientID, jsonDoc[F("MQTT")][F("username")].as<const char *>(), jsonDoc[F("MQTT")][F("password")].as<const char *>());
+
+  //Subscribe to needed topic
+  if (mqttClient.connected())
+  {
+    //Subscribe to needed topic
+  }
+
+  return mqttClient.connected();
+}
+
+void MqttCallback(char *topic, uint8_t *payload, unsigned int length) {}
 
 void setup()
 {
@@ -225,7 +257,14 @@ void setup()
   ParseJSON(jsonBuffer);
   free(jsonBuffer);
 
-  Serial.println(jsonDoc[F("MQTT")][F("hostname")].as<String>());
+  //setup MQTT client (PubSubClient)
+  mqttClient.setClient(mqttEthClient).setServer(jsonDoc[F("MQTT")][F("hostname")].as<const char *>(), jsonDoc[F("MQTT")][F("port")]).setCallback(MqttCallback);
+
+  //Then connect
+  if (MqttConnect())
+    Serial.println(F("MQTT connected"));
+  else
+    Serial.println(F("MQTT not Connected"));
 }
 
 void loop()
