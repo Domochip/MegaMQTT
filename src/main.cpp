@@ -6,6 +6,9 @@
 #include <EEPROM.h>
 #include <ArduinoJson.h>
 
+#define JSON_BUFFER_MAX_SIZE 1024
+#define JSON_DOCUMENT_MAX_SIZE 1024
+
 //Ethernet variables
 byte mac[6];
 IPAddress ip(192, 168, 1, 177);
@@ -13,7 +16,7 @@ IPAddress ip(192, 168, 1, 177);
 EthernetServer webServer(80);
 
 //JSON variable
-StaticJsonDocument<1024> jsonDoc;
+StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
 
 void SoftwareReset()
 {
@@ -41,6 +44,32 @@ bool EthernetConnection()
     webServer.begin();
 
   return Ethernet.linkStatus() != LinkOFF;
+}
+
+void ReadJSONFromEEPROM(char *jsonBuffer)
+{
+  uint16_t i = 0;
+  while (EEPROM[i])
+  {
+    jsonBuffer[i] = EEPROM[i];
+    i++;
+  }
+  EEPROM[i] = 0;
+}
+
+void SaveJSONToEEPROM(const char *json)
+{
+  for (uint16_t i = 0; i < strlen(json); i++)
+    EEPROM[i] = json[i];
+  EEPROM[strlen(json)] = 0;
+}
+
+bool ParseJSON(const char *jsonBuffer)
+{
+  DeserializationError jsonError = deserializeJson(jsonDoc, jsonBuffer);
+  if (jsonError)
+    Serial.println(F("JSON parsing failed"));
+  return !jsonError;
 }
 
 void HandleWebClient(EthernetClient &webClient)
@@ -133,9 +162,7 @@ void HandleWebClient(EthernetClient &webClient)
           Serial.println(F("Save JSON to EEPROM"));
 
           //Save JSON to EEPROM
-          for (uint16_t i = 0; i < fileContent.length(); i++)
-            EEPROM[i] = fileContent[i];
-          EEPROM[fileContent.length()] = 0;
+          SaveJSONToEEPROM(fileContent.c_str());
 
           //Answer to the webClient
           webClient.println(F("HTTP/1.1 200 OK"));
@@ -188,6 +215,14 @@ void setup()
 
   //Start Ethernet
   EthernetConnection();
+
+  //Load JSON from EEPROM
+  char *jsonBuffer = (char *)malloc(JSON_BUFFER_MAX_SIZE + 1);
+  ReadJSONFromEEPROM(jsonBuffer);
+  ParseJSON(jsonBuffer);
+  free(jsonBuffer);
+
+  Serial.println(jsonDoc[F("RollerShutter")][0][F("id")].as<String>());
 }
 
 void loop()
