@@ -73,18 +73,49 @@ void loop()
     if (webClient.connected())
     {
       //receive and parse his request
-      String requestedWebpage; //URL requested
-      while (webClient.available())
+      bool isRequestHeaderFinished = false;
+      bool isPOSTRequest = false;
+      String requestURI;      //URL requested
+      String requestBoundary; //
+
+      while (webClient.available() && !isRequestHeaderFinished)
       {
         String reqLine = webClient.readStringUntil('\n');
+
+        //DEBUG
+        Serial.print(F("->"));
+        Serial.println(reqLine);
+        Serial.print(F("--+ Length : "));
+        Serial.println(reqLine.length());
+
+        //Parse method and URI
         if (reqLine.endsWith(F(" HTTP/1.1\r")))
     {
           if (reqLine.startsWith(F("GET ")))
-            requestedWebpage = reqLine.substring(4, reqLine.length() - 10);
+            requestURI = reqLine.substring(4, reqLine.length() - 10);
+          if (reqLine.startsWith(F("POST ")))
+          {
+            isPOSTRequest = true;
+            requestURI = reqLine.substring(4, reqLine.length() - 10);
+          }
         }
+
+        //Parse boundary (if file is POSTed)
+        if (reqLine.startsWith(F("Content-Type: multipart/form-data; boundary=")))
+        {
+          requestBoundary = reqLine.substring(44, reqLine.length() - 1);
+        }
+
+        //Does request Header is finished
+        if (reqLine.length() == 1 && reqLine[0] == '\r')
+          isRequestHeaderFinished = true;
       }
-      Serial.print(F("URL requested : "));
-      Serial.println(requestedWebpage);
+      Serial.print(F("Request Method : "));
+      Serial.println(isPOSTRequest ? F("POST") : F("GET"));
+      Serial.print(F("Request URI : "));
+      Serial.println(requestURI);
+      Serial.print(F("Request Boundary : "));
+      Serial.println(requestBoundary);
     }
     webClient.stop();
   }
