@@ -170,6 +170,9 @@ void HandleWebClient(EthernetClient &webClient)
           webClient.println();
           webClient.println(F("JSON Config file saved"));
 
+          delay(1); // give webClient time to receive the data
+          webClient.stop(); // close the connection
+
           Serial.println(F("Reboot"));
           SoftwareReset();
         }
@@ -222,7 +225,7 @@ void setup()
   ParseJSON(jsonBuffer);
   free(jsonBuffer);
 
-  Serial.println(jsonDoc[F("RollerShutter")][0][F("id")].as<String>());
+  Serial.println(jsonDoc[F("MQTT")][F("hostname")].as<String>());
 }
 
 void loop()
@@ -230,7 +233,5 @@ void loop()
   //take and check if a webClient is there
   EthernetClient webClient = webServer.available();
   if (webClient)
-  {
     HandleWebClient(webClient);
-  }
 }
