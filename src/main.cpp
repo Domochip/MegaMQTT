@@ -3,14 +3,15 @@
 #include <avr/wdt.h>
 #include <SPI.h>
 #include <Ethernet.h>
+#include <EEPROM.h>
 
 //Ethernet variables
 byte mac[6];
 IPAddress ip(192, 168, 1, 177);
-bool _needEthernetReconnection = false;
+//WebServer
 EthernetServer webServer(80);
 
-void softwareReset()
+void SoftwareReset()
 {
   wdt_enable(WDTO_15MS);
   while (1)
@@ -18,27 +19,31 @@ void softwareReset()
   }
 }
 
-bool ethernetConnection()
+bool EthernetConnection()
 {
   Ethernet.begin(mac, ip);
 
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
     Serial.println(F("Ethernet shield not found!!! Restart..."));
-    softwareReset();
+    SoftwareReset();
   }
 
   if (Ethernet.linkStatus() == LinkOFF)
     Serial.println(F("Ethernet cable is not connected."));
 
-  if (Ethernet.linkStatus() != LinkOFF)
-  {
     // If webServer not yet started then start it
     if (!webServer)
       webServer.begin();
-  }
 
   return Ethernet.linkStatus() != LinkOFF;
+  }
+
+void saveJSONtoEEPROM(const char *json)
+{
+  for (uint16_t i = 0; i < strlen(json); i++)
+    EEPROM[i] = json[i];
+  EEPROM[strlen(json)] = 0;
 }
 
 void setup()
@@ -54,19 +59,32 @@ void setup()
   //Start serial
   Serial.begin(115200);
 
-  if (!ethernetConnection())
-    _needEthernetReconnection = true;
+  //Start Ethernet
+  EthernetConnection();
 }
 
 void loop()
 {
+  //take and check if a webClient is there
   EthernetClient webClient = webServer.available();
   if (webClient)
   {
-    while (webClient.connected())
+    //if it's connected
+    if (webClient.connected())
     {
-      if (webClient.available())
-        Serial.write(webClient.read());
+      //receive and parse his request
+      String requestedWebpage; //URL requested
+      while (webClient.available())
+      {
+        String reqLine = webClient.readStringUntil('\n');
+        if (reqLine.endsWith(F(" HTTP/1.1\r")))
+    {
+          if (reqLine.startsWith(F("GET ")))
+            requestedWebpage = reqLine.substring(4, reqLine.length() - 10);
+        }
+      }
+      Serial.print(F("URL requested : "));
+      Serial.println(requestedWebpage);
     }
     webClient.stop();
   }
