@@ -31,23 +31,23 @@ bool ethernetConnection()
   if (Ethernet.linkStatus() == LinkOFF)
     Serial.println(F("Ethernet cable is not connected."));
 
-  if (Ethernet.linkStatus() == LinkON)
+  if (Ethernet.linkStatus() != LinkOFF)
   {
     // If webServer not yet started then start it
     if (!webServer)
       webServer.begin();
   }
 
-  return Ethernet.linkStatus() == LinkON;
+  return Ethernet.linkStatus() != LinkOFF;
 }
 
 void setup()
 {
   //build MAC address based on hidden ATMega2560 serial number
-  mac[0] = boot_signature_byte_get(0x11);
-  mac[1] = boot_signature_byte_get(0x12);
-  mac[2] = boot_signature_byte_get(0x13);
-  mac[3] = boot_signature_byte_get(0x15);
+  mac[0] = 0xDE;
+  mac[1] = 0xAD;
+  mac[2] = 0xBE;
+  mac[3] = 0xEF;
   mac[4] = boot_signature_byte_get(0x16);
   mac[5] = boot_signature_byte_get(0x17);
 
@@ -66,7 +66,7 @@ void loop()
     while (webClient.connected())
     {
       if (webClient.available())
-        webClient.read();
+        Serial.write(webClient.read());
     }
     webClient.stop();
   }
