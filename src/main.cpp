@@ -195,8 +195,9 @@ void WebServerRun()
       //if JSON Config file POSTed
       if (requestURI == F("/conf"))
       {
-        //Deserialize it into jsonDoc
-        DeserializationError jsonError = deserializeJson(jsonDoc, fileContent);
+        //Try to deserialize it
+        DynamicJsonDocument dynJsonDoc(JSON_DOCUMENT_MAX_SIZE); //Caution : Heap already has fileContent and will get this JSON too...
+        DeserializationError jsonError = deserializeJson(dynJsonDoc, fileContent);
         //if deserialization succeed
         if (!jsonError)
         {
@@ -215,12 +216,7 @@ void WebServerRun()
           SoftwareReset();
         }
         else
-        {
           webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nIncorrect JSON Config file"));
-
-          //Reload JSON from EEPROM
-          //TODO
-        }
       }
     }
 
