@@ -14,10 +14,9 @@
 //Ethernet variables
 byte mac[6];
 IPAddress ip(192, 168, 1, 177);
-//WebServer
 EthernetServer webServer(80);
 
-//JSON variable
+//CONFIG variable
 StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
 
 //MQTT variables
@@ -26,6 +25,7 @@ PubSubClient mqttClient;
 bool needMqttReconnect = false;
 SimpleTimer mqttReconnectTimer;
 
+//---------UTILS---------
 void SoftwareReset()
 {
   wdt_enable(WDTO_15MS);
@@ -34,8 +34,44 @@ void SoftwareReset()
   }
 }
 
-bool EthernetConnection()
+//---------CONFIG---------
+void EEPROMReadJson(char *jsonBuffer)
 {
+  uint16_t i = 0;
+  while (EEPROM[i])
+  {
+    jsonBuffer[i] = EEPROM[i];
+    i++;
+  }
+  EEPROM[i] = 0;
+}
+
+void EEPROMSaveJson(const char *json)
+{
+  for (uint16_t i = 0; i < strlen(json); i++)
+    EEPROM[i] = json[i];
+  EEPROM[strlen(json)] = 0;
+}
+
+bool JSONParse(const char *jsonBuffer)
+{
+  DeserializationError jsonError = deserializeJson(jsonDoc, jsonBuffer);
+  if (jsonError)
+    Serial.println(F("JSON parsing failed"));
+  return !jsonError;
+}
+
+//---------ETHERNET---------
+bool EthernetConnect()
+{
+  //build MAC address based on hidden ATMega2560 serial number
+  mac[0] = 0xDE;
+  mac[1] = 0xAD;
+  mac[2] = 0xBE;
+  mac[3] = 0xEF;
+  mac[4] = boot_signature_byte_get(0x16);
+  mac[5] = boot_signature_byte_get(0x17);
+
   Ethernet.begin(mac, ip);
 
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
@@ -54,34 +90,13 @@ bool EthernetConnection()
   return Ethernet.linkStatus() != LinkOFF;
 }
 
-void ReadJSONFromEEPROM(char *jsonBuffer)
+void EthernetRun()
 {
-  uint16_t i = 0;
-  while (EEPROM[i])
-  {
-    jsonBuffer[i] = EEPROM[i];
-    i++;
-  }
-  EEPROM[i] = 0;
-}
+  //take and check if a webClient is there
+  EthernetClient webClient = webServer.available();
+  if (!webClient)
+    return;
 
-void SaveJSONToEEPROM(const char *json)
-{
-  for (uint16_t i = 0; i < strlen(json); i++)
-    EEPROM[i] = json[i];
-  EEPROM[strlen(json)] = 0;
-}
-
-bool ParseJSON(const char *jsonBuffer)
-{
-  DeserializationError jsonError = deserializeJson(jsonDoc, jsonBuffer);
-  if (jsonError)
-    Serial.println(F("JSON parsing failed"));
-  return !jsonError;
-}
-
-void HandleWebClient(EthernetClient &webClient)
-{
   //if it's connected
   if (webClient.connected())
   {
@@ -170,7 +185,7 @@ void HandleWebClient(EthernetClient &webClient)
           Serial.println(F("Save JSON to EEPROM"));
 
           //Save JSON to EEPROM
-          SaveJSONToEEPROM(fileContent.c_str());
+          EEPROMSaveJson(fileContent.c_str());
 
           //Answer to the webClient
           webClient.println(F("HTTP/1.1 200 OK"));
@@ -210,7 +225,7 @@ void HandleWebClient(EthernetClient &webClient)
   }
   webClient.stop();
 }
-//------------------------------------------
+//---------MQTT---------
 // Connect then Subscribe to MQTT
 bool MqttConnect()
 {
@@ -238,49 +253,8 @@ bool MqttConnect()
 
 void MqttCallback(char *topic, uint8_t *payload, unsigned int length) {}
 
-void setup()
+void MqttRun()
 {
-  //build MAC address based on hidden ATMega2560 serial number
-  mac[0] = 0xDE;
-  mac[1] = 0xAD;
-  mac[2] = 0xBE;
-  mac[3] = 0xEF;
-  mac[4] = boot_signature_byte_get(0x16);
-  mac[5] = boot_signature_byte_get(0x17);
-
-  //Start serial
-  Serial.begin(115200);
-
-  //Start Ethernet
-  EthernetConnection();
-
-  //Load JSON from EEPROM
-  char *jsonBuffer = (char *)malloc(JSON_BUFFER_MAX_SIZE + 1);
-  ReadJSONFromEEPROM(jsonBuffer);
-  ParseJSON(jsonBuffer);
-  free(jsonBuffer);
-
-  //setup MQTT client (PubSubClient)
-  mqttClient.setClient(mqttEthClient).setServer(jsonDoc[F("MQTT")][F("hostname")].as<const char *>(), jsonDoc[F("MQTT")][F("port")]).setCallback(MqttCallback);
-
-  //Then connect
-  if (MqttConnect())
-    Serial.println(F("MQTT connected"));
-  else
-    Serial.println(F("MQTT not Connected"));
-}
-
-void loop()
-{
-  //------------------------HOME AUTOMATION------------------------
-  
-  //------------------------WEBSERVER------------------------
-  //take and check if a webClient is there
-  EthernetClient webClient = webServer.available();
-  if (webClient)
-    HandleWebClient(webClient);
-
-  //------------------------MQTT------------------------
   //If MQTT need to be reconnected
   if (needMqttReconnect)
   {
@@ -305,4 +279,42 @@ void loop()
 
   //Run mqttClient
   mqttClient.loop();
+}
+
+
+//---------SETUP---------
+void setup()
+{
+  //Start serial
+  Serial.begin(115200);
+
+  //Start Ethernet
+  EthernetConnect();
+
+  //Load JSON from EEPROM
+  char *jsonBuffer = (char *)malloc(JSON_BUFFER_MAX_SIZE + 1);
+  EEPROMReadJson(jsonBuffer);
+  JSONParse(jsonBuffer);
+  free(jsonBuffer);
+
+  //setup MQTT client (PubSubClient)
+  mqttClient.setClient(mqttEthClient).setServer(jsonDoc[F("MQTT")][F("hostname")].as<const char *>(), jsonDoc[F("MQTT")][F("port")]).setCallback(MqttCallback);
+
+  //Then connect
+  if (MqttConnect())
+    Serial.println(F("MQTT connected"));
+  else
+    Serial.println(F("MQTT not Connected"));
+}
+
+//---------LOOP---------
+void loop()
+{
+  //------------------------HOME AUTOMATION------------------------
+
+  //------------------------WEBSERVER------------------------
+  EthernetRun();
+
+  //------------------------MQTT------------------------
+  MqttRun();
 }
