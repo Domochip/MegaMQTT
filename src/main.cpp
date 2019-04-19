@@ -152,6 +152,9 @@ void WebServerRun()
     //if GET request
     if (!isPOSTRequest)
     {
+      webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nNothing Here Yet ;-)"));
+      delay(1);         //give webClient time to receive the data
+      webClient.stop(); //close the connection
     }
     else //else that is a POST request
     {
@@ -169,22 +172,17 @@ void WebServerRun()
           ConfigSaveJson(fileContent.c_str());
 
           //Answer to the webClient
-          webClient.println(F("HTTP/1.1 200 OK"));
-          webClient.println(F("Content-Type: text/html"));
-          webClient.println();
-          webClient.println(F("JSON Config file saved"));
+          webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nJSON Config file saved"));
 
-          delay(1);         // give webClient time to receive the data
-          webClient.stop(); // close the connection
+          delay(1);         //give webClient time to receive the data
+          webClient.stop(); //close the connection
 
           Serial.println(F("Reboot"));
           SoftwareReset();
         }
         else
         {
-          webClient.println(F("HTTP/1.1 400 Bad Request"));
-          webClient.println();
-          webClient.println(F("Incorrect JSON Config file"));
+          webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nIncorrect JSON Config file"));
 
           //Reload JSON from EEPROM
           //TODO
