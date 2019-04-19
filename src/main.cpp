@@ -283,7 +283,16 @@ bool MqttConnect()
   //Subscribe to needed topic
   if (mqttClient.connected())
   {
-    //Subscribe to needed topic
+    if (nbLights)
+    {
+      for (uint8_t i = 0; i < nbLights; i++)
+        lights[i]->MqttSubscribe(mqttClient, jsonDoc[F("baseTopic")].as<const char *>());
+    }
+    if (nbRollerShutters)
+    {
+      // for (uint8_t i = 0; i < nbRollerShutters; i++)
+      //   rollerShutters[i]->MqttSubscribe(mqttClient, jsonDoc[F("baseTopic")].as<const char *>());
+    }
   }
 
   return mqttClient.connected();
