@@ -11,9 +11,11 @@
 #define JSON_BUFFER_MAX_SIZE 1024
 #define JSON_DOCUMENT_MAX_SIZE 1024
 
-//Ethernet variables
+//ETHERNET variables
 byte mac[6];
 IPAddress ip(192, 168, 1, 177);
+
+//WEBSERVER variables
 EthernetServer webServer(80);
 
 //CONFIG variable
@@ -35,7 +37,7 @@ void SoftwareReset()
 }
 
 //---------CONFIG---------
-void EEPROMReadJson(char *jsonBuffer)
+void ConfigReadJson(char *jsonBuffer)
 {
   uint16_t i = 0;
   while (EEPROM[i])
@@ -46,14 +48,14 @@ void EEPROMReadJson(char *jsonBuffer)
   EEPROM[i] = 0;
 }
 
-void EEPROMSaveJson(const char *json)
+void ConfigSaveJson(const char *json)
 {
   for (uint16_t i = 0; i < strlen(json); i++)
     EEPROM[i] = json[i];
   EEPROM[strlen(json)] = 0;
 }
 
-bool JSONParse(const char *jsonBuffer)
+bool ConfigParse(const char *jsonBuffer)
 {
   DeserializationError jsonError = deserializeJson(jsonDoc, jsonBuffer);
   if (jsonError)
@@ -61,36 +63,15 @@ bool JSONParse(const char *jsonBuffer)
   return !jsonError;
 }
 
-//---------ETHERNET---------
-bool EthernetConnect()
+//---------WEBSERVER---------
+void WebServerStart()
 {
-  //build MAC address based on hidden ATMega2560 serial number
-  mac[0] = 0xDE;
-  mac[1] = 0xAD;
-  mac[2] = 0xBE;
-  mac[3] = 0xEF;
-  mac[4] = boot_signature_byte_get(0x16);
-  mac[5] = boot_signature_byte_get(0x17);
-
-  Ethernet.begin(mac, ip);
-
-  if (Ethernet.hardwareStatus() == EthernetNoHardware)
-  {
-    Serial.println(F("Ethernet shield not found!!! Restart..."));
-    SoftwareReset();
-  }
-
-  if (Ethernet.linkStatus() == LinkOFF)
-    Serial.println(F("Ethernet cable is not connected."));
-
   // If webServer not yet started then start it
   if (!webServer)
     webServer.begin();
-
-  return Ethernet.linkStatus() != LinkOFF;
 }
 
-void EthernetRun()
+void WebServerRun()
 {
   //take and check if a webClient is there
   EthernetClient webClient = webServer.available();
@@ -121,7 +102,7 @@ void EthernetRun()
       if (reqLine.endsWith(F(" HTTP/1.1\r")))
       {
         if (reqLine.startsWith(F("GET ")))
-          requestURI = reqLine.substring(5, reqLine.length() - 10);
+          requestURI = reqLine.substring(4, reqLine.length() - 10);
         if (reqLine.startsWith(F("POST ")))
         {
           isPOSTRequest = true;
@@ -185,7 +166,7 @@ void EthernetRun()
           Serial.println(F("Save JSON to EEPROM"));
 
           //Save JSON to EEPROM
-          EEPROMSaveJson(fileContent.c_str());
+          ConfigSaveJson(fileContent.c_str());
 
           //Answer to the webClient
           webClient.println(F("HTTP/1.1 200 OK"));
@@ -225,6 +206,32 @@ void EthernetRun()
   }
   webClient.stop();
 }
+
+//---------ETHERNET---------
+bool EthernetConnect()
+{
+  //build MAC address based on hidden ATMega2560 serial number
+  mac[0] = 0xDE;
+  mac[1] = 0xAD;
+  mac[2] = 0xBE;
+  mac[3] = 0xEF;
+  mac[4] = boot_signature_byte_get(0x16);
+  mac[5] = boot_signature_byte_get(0x17);
+
+  Ethernet.begin(mac, ip);
+
+  if (Ethernet.hardwareStatus() == EthernetNoHardware)
+  {
+    Serial.println(F("Ethernet shield not found!!! Restart..."));
+    SoftwareReset();
+  }
+
+  if (Ethernet.linkStatus() == LinkOFF)
+    Serial.println(F("Ethernet cable is not connected."));
+
+  return Ethernet.linkStatus() != LinkOFF;
+}
+
 //---------MQTT---------
 // Connect then Subscribe to MQTT
 bool MqttConnect()
@@ -281,7 +288,6 @@ void MqttRun()
   mqttClient.loop();
 }
 
-
 //---------SETUP---------
 void setup()
 {
@@ -291,10 +297,13 @@ void setup()
   //Start Ethernet
   EthernetConnect();
 
+  //Start WebServer
+  WebServerStart();
+
   //Load JSON from EEPROM
   char *jsonBuffer = (char *)malloc(JSON_BUFFER_MAX_SIZE + 1);
-  EEPROMReadJson(jsonBuffer);
-  JSONParse(jsonBuffer);
+  ConfigReadJson(jsonBuffer);
+  ConfigParse(jsonBuffer);
   free(jsonBuffer);
 
   //setup MQTT client (PubSubClient)
@@ -313,7 +322,7 @@ void loop()
   //------------------------HOME AUTOMATION------------------------
 
   //------------------------WEBSERVER------------------------
-  EthernetRun();
+  WebServerRun();
 
   //------------------------MQTT------------------------
   MqttRun();
