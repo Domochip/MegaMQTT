@@ -71,6 +71,16 @@ void Light::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
     mqttClient.subscribe(completeTopic);
 }
 
+bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
+{
+    if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
+    {
+        //TODO handle MQTT message
+        return true;
+    }
+    return false;
+}
+
 void Light::Run()
 {
     if (!_initialized)

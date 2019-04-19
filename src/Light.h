@@ -23,6 +23,7 @@ class Light
     Light(JsonVariant config);
     Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode = false);
     void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
+    bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
     void Run();
 };
 
