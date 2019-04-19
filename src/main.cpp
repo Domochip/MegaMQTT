@@ -81,7 +81,7 @@ void ConfigCreateHAObjects()
     lights = (Light **)calloc(nbLights, sizeof(Light *));
     for (byte i = 0; i < nbLights; i++)
     {
-      lights[i] = new Light(jsonDoc[F("Light")][i][F("pins")].as<const char *>()); //TODO pass whole JSON Object
+      lights[i] = new Light(jsonDoc[F("Light")][i].as<JsonVariant>());
     }
   }
 
@@ -92,7 +92,7 @@ void ConfigCreateHAObjects()
     rollerShutters = (RollerShutter **)calloc(nbRollerShutters, sizeof(RollerShutter *));
     for (byte i = 0; i < nbRollerShutters; i++)
     {
-      rollerShutters[i] = new RollerShutter(jsonDoc[F("RollerShutter")][i][F("pins")].as<const char *>()); //TODO pass whole JSON Object
+      rollerShutters[i] = new RollerShutter(jsonDoc[F("RollerShutter")][i].as<JsonVariant>());
     }
   }
 }
