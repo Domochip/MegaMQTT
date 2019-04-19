@@ -8,6 +8,8 @@
 #include <PubSubClient.h>
 #include <SimpleTimer.h> //!\ MAX_TIMERS = 1 /!\.
 
+#include "RollerShutter.h"
+
 #define JSON_BUFFER_MAX_SIZE 1024
 #define JSON_DOCUMENT_MAX_SIZE 1024
 
@@ -258,6 +260,18 @@ bool MqttConnect()
 
 void MqttCallback(char *topic, uint8_t *payload, unsigned int length) {}
 
+void MqttStart()
+{
+  //setup MQTT client (PubSubClient)
+  mqttClient.setClient(mqttEthClient).setServer(jsonDoc[F("MQTT")][F("hostname")].as<const char *>(), jsonDoc[F("MQTT")][F("port")]).setCallback(MqttCallback);
+
+  //Then connect
+  if (MqttConnect())
+    Serial.println(F("MQTT connected"));
+  else
+    Serial.println(F("MQTT not Connected"));
+}
+
 void MqttRun()
 {
   //If MQTT need to be reconnected
@@ -292,26 +306,20 @@ void setup()
   //Start serial
   Serial.begin(115200);
 
-  //Start Ethernet
-  EthernetConnect();
-
-  //Start WebServer
-  WebServerStart();
-
   //Load JSON from EEPROM
   char *jsonBuffer = (char *)malloc(JSON_BUFFER_MAX_SIZE + 1);
   ConfigReadJson(jsonBuffer);
   ConfigParse(jsonBuffer);
   free(jsonBuffer);
 
-  //setup MQTT client (PubSubClient)
-  mqttClient.setClient(mqttEthClient).setServer(jsonDoc[F("MQTT")][F("hostname")].as<const char *>(), jsonDoc[F("MQTT")][F("port")]).setCallback(MqttCallback);
+  //Start Ethernet
+  EthernetConnect();
 
-  //Then connect
-  if (MqttConnect())
-    Serial.println(F("MQTT connected"));
-  else
-    Serial.println(F("MQTT not Connected"));
+  //Start WebServer
+  WebServerStart();
+
+  //Start MQTT
+  MqttStart();
 }
 
 //---------LOOP---------
