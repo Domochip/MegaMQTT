@@ -27,10 +27,10 @@ Light::Light(JsonVariant config)
     pinLight = atoi(pinStr);
 
     //call Constructor with parsed values
-    Light(config["id"].as<const char *>(), pinBtn, pinLight);
+    Light(config["id"].as<const char *>(), pinBtn, pinLight, config["pushbutton"] | false);
 }
 
-Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight)
+Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode /* = false*/)
 {
     //DEBUG
     Serial.print(F("new Light("));
@@ -55,6 +55,9 @@ Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight)
     pinMode(_pinLight, OUTPUT);
     digitalWrite(_pinLight, LOW);
 
+    //save pushButtonMode
+    _pushButtonMode = pushButtonMode;
+
     _initialized = true;
 }
 void Light::Run()
@@ -62,8 +65,7 @@ void Light::Run()
     if (!_initialized)
         return;
 
-    //TODO handle pushbutton
-    //if button state changed, then invert output
-    if (_btn.update())
-        digitalWrite(_pinLight, !digitalRead(_pinLight));
+    //if button state changed AND (not a pushButton OR input rose)
+    if (_btn.update() && (!_pushButtonMode || _btn.rose()))
+        digitalWrite(_pinLight, !digitalRead(_pinLight)); //then invert output
 }

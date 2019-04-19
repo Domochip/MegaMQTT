@@ -19,7 +19,8 @@
     "Light": [
         {
             "id": "L0",
-            "pins": "20,21"
+            "pins": "20,21",
+            "pushbutton": true
         }
     ]
 }
