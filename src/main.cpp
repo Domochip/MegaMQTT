@@ -217,6 +217,9 @@ void WebServerRun()
         }
         else
           webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nIncorrect JSON Config file"));
+
+        //Clean Dynamic JSON Doc
+        dynJsonDoc.clear();
       }
     }
 
