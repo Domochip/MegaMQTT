@@ -8,10 +8,20 @@
 #include <PubSubClient.h>
 #include <SimpleTimer.h> //!\ MAX_TIMERS = 1 /!\.
 
+#include "Light.h"
 #include "RollerShutter.h"
 
 #define JSON_BUFFER_MAX_SIZE 1024
 #define JSON_DOCUMENT_MAX_SIZE 1024
+
+//CONFIG variable
+StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
+
+//HA variables
+uint8_t nbLights;
+Light **lights;
+uint8_t nbRollerShutters;
+RollerShutter **rollerShutters;
 
 //ETHERNET variables
 byte mac[6];
@@ -19,9 +29,6 @@ IPAddress ip(192, 168, 1, 177);
 
 //WEBSERVER variables
 EthernetServer webServer(80);
-
-//CONFIG variable
-StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
 
 //MQTT variables
 EthernetClient mqttEthClient;
@@ -63,6 +70,31 @@ bool ConfigParse(const char *jsonBuffer)
   if (jsonError)
     Serial.println(F("JSON parsing failed"));
   return !jsonError;
+}
+
+void ConfigCreateHAObjects()
+{
+  //if Light is in JSON and not empty
+  if (!jsonDoc[F("Light")].isNull() && jsonDoc[F("Light")].size())
+  {
+    nbLights = jsonDoc[F("Light")].size();
+    lights = (Light **)calloc(nbLights, sizeof(Light *));
+    for (byte i = 0; i < nbLights; i++)
+    {
+      lights[i] = new Light(jsonDoc[F("Light")][i][F("pins")].as<const char *>()); //TODO pass whole JSON Object
+    }
+  }
+
+  //if RollerShutter is in JSON and not empty
+  if (!jsonDoc[F("RollerShutter")].isNull() && jsonDoc[F("RollerShutter")].size())
+  {
+    nbRollerShutters = jsonDoc[F("RollerShutter")].size();
+    rollerShutters = (RollerShutter **)calloc(nbRollerShutters, sizeof(RollerShutter *));
+    for (byte i = 0; i < nbRollerShutters; i++)
+    {
+      rollerShutters[i] = new RollerShutter(jsonDoc[F("RollerShutter")][i][F("pins")].as<const char *>()); //TODO pass whole JSON Object
+    }
+  }
 }
 
 //---------WEBSERVER---------
@@ -311,6 +343,9 @@ void setup()
   ConfigReadJson(jsonBuffer);
   ConfigParse(jsonBuffer);
   free(jsonBuffer);
+
+  //Create Home Automation Objects
+  ConfigCreateHAObjects();
 
   //Start Ethernet
   EthernetConnect();

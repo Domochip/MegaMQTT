@@ -55,7 +55,7 @@ RollerShutter::RollerShutter(uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRo
     _initialized = true;
 }
 
-void RollerShutter::Update()
+void RollerShutter::Run()
 {
     if (_btnUp.update())
     {

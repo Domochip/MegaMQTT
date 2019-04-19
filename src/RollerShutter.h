@@ -14,7 +14,7 @@ class RollerShutter
     RollerShutter(){};
     RollerShutter(const char *pinsList);
     RollerShutter(uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower);
-    void Update();
+    void Run();
 };
 
 #endif
