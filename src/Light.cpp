@@ -61,6 +61,11 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
     Serial.print(pinBtn);
     Serial.print(',');
     Serial.print(pinLight);
+    if (pushButtonMode)
+    {
+        Serial.print(',');
+        Serial.print(F("pushButtonMode"));
+    }
     Serial.println(')');
 
     //copy id pointer
