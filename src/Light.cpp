@@ -73,9 +73,30 @@ void Light::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
 
 bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
 {
+    //if relevantPartOfTopic starts with id of this Light ending with '/'
     if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
     {
-        //TODO handle MQTT message
+        //if topic finishes by '/command'
+        if (!strcmp_P(relevantPartOfTopic + strlen(relevantPartOfTopic) - 8, PSTR("/command")))
+        {
+            switch (payload[0])
+            {
+            //OFF requested
+            case '0':
+                digitalWrite(_pinLight, LOW);
+                break;
+            //ON requested
+            case '1':
+                digitalWrite(_pinLight, HIGH);
+                break;
+            //TOGGLE requested
+            case 't':
+            case 'T':
+                digitalWrite(_pinLight, !digitalRead(_pinLight));
+                break;
+            }
+        }
+        
         return true;
     }
     return false;
