@@ -22,10 +22,10 @@ StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
 EventManager eventManager;
 
 //HA variables
-uint8_t nbLights;
-Light **lights;
-uint8_t nbRollerShutters;
-RollerShutter **rollerShutters;
+uint8_t nbLights = 0;
+Light **lights = NULL;
+uint8_t nbRollerShutters = 0;
+RollerShutter **rollerShutters = NULL;
 
 //ETHERNET variables
 byte mac[6];
