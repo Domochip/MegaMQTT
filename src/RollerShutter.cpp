@@ -1,6 +1,6 @@
 #include "RollerShutter.h"
 
-RollerShutter::RollerShutter(JsonVariant config)
+RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
 {
     if (config["id"].isNull())
         return;
@@ -35,10 +35,10 @@ RollerShutter::RollerShutter(JsonVariant config)
     pinRollerPower = atoi(pinStr);
 
     //call Constructor with parsed values
-    RollerShutter(config["id"].as<const char *>(), pinBtnUp, pinBtnDown, pinRollerDir, pinRollerPower);
+    RollerShutter(config["id"].as<const char *>(), pinBtnUp, pinBtnDown, pinRollerDir, pinRollerPower, evtMgr);
 }
 
-RollerShutter::RollerShutter(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower)
+RollerShutter::RollerShutter(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("new RollerShutter("));
@@ -69,6 +69,9 @@ RollerShutter::RollerShutter(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDow
     //setup outputs
     pinMode(_pinRollerDir, OUTPUT);
     pinMode(_pinRollerPower, OUTPUT);
+
+    //save EventManager
+    _evtMgr = evtMgr;
 
     _initialized = true;
 }

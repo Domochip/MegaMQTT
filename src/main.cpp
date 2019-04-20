@@ -8,6 +8,8 @@
 #include <PubSubClient.h>
 #include <SimpleTimer.h> //!\ MAX_TIMERS = 1 /!\.
 
+#include "EventManager.h"
+
 #include "Light.h"
 #include "RollerShutter.h"
 
@@ -16,6 +18,8 @@
 
 //CONFIG variable
 StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
+
+EventManager eventManager;
 
 //HA variables
 uint8_t nbLights;
@@ -81,7 +85,7 @@ void ConfigCreateHAObjects()
     lights = (Light **)calloc(nbLights, sizeof(Light *));
     for (byte i = 0; i < nbLights; i++)
     {
-      lights[i] = new Light(jsonDoc[F("Light")][i].as<JsonVariant>());
+      lights[i] = new Light(jsonDoc[F("Light")][i].as<JsonVariant>(), &eventManager);
     }
   }
 
@@ -92,7 +96,7 @@ void ConfigCreateHAObjects()
     rollerShutters = (RollerShutter **)calloc(nbRollerShutters, sizeof(RollerShutter *));
     for (byte i = 0; i < nbRollerShutters; i++)
     {
-      rollerShutters[i] = new RollerShutter(jsonDoc[F("RollerShutter")][i].as<JsonVariant>());
+      rollerShutters[i] = new RollerShutter(jsonDoc[F("RollerShutter")][i].as<JsonVariant>(), &eventManager);
     }
   }
 }
@@ -390,4 +394,10 @@ void loop()
 
   //------------------------MQTT------------------------
   MqttRun();
+  //publish Events
+  EventManager::Event *evtToSend;
+  bool publishSucceeded = true;
+  while (publishSucceeded && (evtToSend = eventManager.Available()))
+    if ((publishSucceeded = mqttClient.publish(evtToSend->topic, evtToSend->payload)))
+      evtToSend->sent = true;
 }

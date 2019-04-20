@@ -1,6 +1,6 @@
 #include "Light.h"
 
-Light::Light(JsonVariant config)
+Light::Light(JsonVariant config, EventManager *evtMgr)
 {
     if (config["id"].isNull())
         return;
@@ -27,10 +27,10 @@ Light::Light(JsonVariant config)
     pinLight = atoi(pinStr);
 
     //call Constructor with parsed values
-    Light(config["id"].as<const char *>(), pinBtn, pinLight, config["pushbutton"] | false);
+    Light(config["id"].as<const char *>(), pinBtn, pinLight, config["pushbutton"] | false, evtMgr);
 }
 
-Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode /* = false*/)
+Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("new Light("));
@@ -57,6 +57,9 @@ Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMo
 
     //save pushButtonMode
     _pushButtonMode = pushButtonMode;
+
+    //save pointer to Eventmanager
+    _evtMgr = evtMgr;
 
     _initialized = true;
 }
@@ -96,7 +99,7 @@ bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned i
                 break;
             }
         }
-        
+
         return true;
     }
     return false;

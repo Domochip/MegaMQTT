@@ -5,9 +5,11 @@
 #include <PubSubClient.h>
 #include <Bounce2.h>
 
-//Light publish : 
+#include "EventManager.h"
+
+//Light publish :
 //  - /status
-//Light subscribe : 
+//Light subscribe :
 //  - /command
 
 class Light
@@ -18,10 +20,11 @@ class Light
     Bounce _btn;
     uint8_t _pinLight;
     bool _pushButtonMode = false;
+    EventManager *_evtMgr = NULL;
 
   public:
-    Light(JsonVariant config);
-    Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode = false);
+    Light(JsonVariant config, EventManager *evtMgr);
+    Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr);
     void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
     bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
     void Run();
