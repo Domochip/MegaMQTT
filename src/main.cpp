@@ -289,8 +289,8 @@ bool MqttConnect()
 
     if (nbRollerShutters)
     {
-      // for (uint8_t i = 0; i < nbRollerShutters; i++)
-      //   rollerShutters[i]->MqttSubscribe(mqttClient, jsonDoc[F("baseTopic")].as<const char *>());
+      for (uint8_t i = 0; i < nbRollerShutters; i++)
+        rollerShutters[i]->MqttSubscribe(mqttClient, jsonDoc[F("baseTopic")].as<const char *>());
     }
   }
 
@@ -310,9 +310,9 @@ void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
     for (uint8_t i = 0; i < nbLights && !messageHandled; i++)
       messageHandled = lights[i]->MqttCallback(relevantPartOfTopic, payload, length);
 
-  // if (nbRollerShutters)
-  //   for (uint8_t i = 0; i < nbRollerShutters && !messageHandled; i++)
-  //     messageHandled = rollerShutters[i]->MqttCallback(relevantPartOfTopic, payload, length);
+  if (nbRollerShutters)
+    for (uint8_t i = 0; i < nbRollerShutters && !messageHandled; i++)
+      messageHandled = rollerShutters[i]->MqttCallback(relevantPartOfTopic, payload, length);
 }
 
 void MqttStart()

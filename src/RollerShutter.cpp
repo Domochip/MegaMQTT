@@ -73,6 +73,33 @@ RollerShutter::RollerShutter(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDow
     _initialized = true;
 }
 
+void RollerShutter::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
+{
+    char *completeTopic = (char *)malloc(strlen(baseTopic) + 1 + strlen(_id) + 8 + 1); // /command
+    strcpy(completeTopic, baseTopic);
+    if (baseTopic[strlen(baseTopic) - 1] != '/')
+        strcat(completeTopic, "/");
+    strcat(completeTopic, _id);
+    strcat_P(completeTopic, PSTR("/command"));
+    mqttClient.subscribe(completeTopic);
+}
+
+bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
+{
+    //if relevantPartOfTopic starts with id of this Light ending with '/'
+    if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
+    {
+        //if topic finishes by '/command'
+        if (!strcmp_P(relevantPartOfTopic + strlen(relevantPartOfTopic) - 8, PSTR("/command")))
+        {
+            //TODO
+        }
+
+        return true;
+    }
+    return false;
+}
+
 void RollerShutter::Run()
 {
     if (!_initialized)
