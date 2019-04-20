@@ -289,14 +289,12 @@ bool MqttConnect()
   {
     if (nbLights)
       for (uint8_t i = 0; i < nbLights; i++)
-        lights[i]->MqttSubscribe(mqttClient, jsonDoc[F("baseTopic")].as<const char *>());
+        lights[i]->MqttSubscribe(mqttClient, jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>());
 
     if (nbRollerShutters)
-    {
       for (uint8_t i = 0; i < nbRollerShutters; i++)
-        rollerShutters[i]->MqttSubscribe(mqttClient, jsonDoc[F("baseTopic")].as<const char *>());
+        rollerShutters[i]->MqttSubscribe(mqttClient, jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>());
     }
-  }
 
   return mqttClient.connected();
 }
@@ -305,7 +303,7 @@ void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
 {
   bool messageHandled = false;
 
-  const char *baseTopic = jsonDoc[F("baseTopic")].as<const char *>();
+  const char *baseTopic = jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>();
   char *relevantPartOfTopic = topic + strlen(baseTopic);
   if (baseTopic[strlen(baseTopic) - 1] != '/')
     relevantPartOfTopic++;
@@ -418,7 +416,7 @@ void loop()
   while (publishSucceeded && (evtToSend = eventManager.Available()))
   {
     //build complete topic : baseTopic(with ending /) + topic in the event
-    completeTopic = jsonDoc[F("baseTopic")].as<const char *>();
+    completeTopic = jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>();
     if (completeTopic[completeTopic.length() - 1] != '/')
       completeTopic += '/';
     completeTopic += evtToSend->topic;
