@@ -9,18 +9,17 @@
     "RollerShutter": [
         {
             "id": "VR0",
-            "pins": "1,2,3,4"
+            "pins": "22,23,24,25"
         },
         {
             "id": "VR1",
-            "pins": "10,11,12,13"
+            "pins": "26,27,28,29"
         }
     ],
     "Light": [
         {
             "id": "L0",
-            "pins": "20,21",
-            "pushbutton": true
+            "pins": "2,13"
         }
     ]
 }
