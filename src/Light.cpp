@@ -88,14 +88,14 @@ Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMo
 }
 void Light::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
 {
-    char *completeTopic = (char *)malloc(strlen(baseTopic) + 1 + strlen(_id) + 8 + 1); // /command
+    char *completeTopic = new char[strlen(baseTopic) + 1 + strlen(_id) + 8 + 1]; // /command
     strcpy(completeTopic, baseTopic);
     if (baseTopic[strlen(baseTopic) - 1] != '/')
         strcat(completeTopic, "/");
     strcat(completeTopic, _id);
     strcat_P(completeTopic, PSTR("/command"));
     mqttClient.subscribe(completeTopic);
-    free(completeTopic);
+    delete[] completeTopic;
 }
 
 bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
