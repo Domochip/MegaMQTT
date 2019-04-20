@@ -82,7 +82,7 @@ void ConfigCreateHAObjects()
   if (!jsonDoc[F("Light")].isNull() && jsonDoc[F("Light")].size())
   {
     nbLights = jsonDoc[F("Light")].size();
-    lights = (Light **)calloc(nbLights, sizeof(Light *));
+    lights = new Light *[nbLights];
     for (byte i = 0; i < nbLights; i++)
     {
       lights[i] = new Light(jsonDoc[F("Light")][i].as<JsonVariant>(), &eventManager);
@@ -93,7 +93,7 @@ void ConfigCreateHAObjects()
   if (!jsonDoc[F("RollerShutter")].isNull() && jsonDoc[F("RollerShutter")].size())
   {
     nbRollerShutters = jsonDoc[F("RollerShutter")].size();
-    rollerShutters = (RollerShutter **)calloc(nbRollerShutters, sizeof(RollerShutter *));
+    rollerShutters = new RollerShutter *[nbRollerShutters];
     for (byte i = 0; i < nbRollerShutters; i++)
     {
       rollerShutters[i] = new RollerShutter(jsonDoc[F("RollerShutter")][i].as<JsonVariant>(), &eventManager);
