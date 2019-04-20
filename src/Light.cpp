@@ -95,6 +95,7 @@ void Light::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
     strcat(completeTopic, _id);
     strcat_P(completeTopic, PSTR("/command"));
     mqttClient.subscribe(completeTopic);
+    free(completeTopic);
 }
 
 bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)

@@ -85,6 +85,7 @@ void RollerShutter::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopi
     strcat(completeTopic, _id);
     strcat_P(completeTopic, PSTR("/command"));
     mqttClient.subscribe(completeTopic);
+    free(completeTopic);
 }
 
 bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
