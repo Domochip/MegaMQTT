@@ -412,8 +412,8 @@ void loop()
   bool publishSucceeded = true;
   String completeTopic;
   completeTopic.reserve(16 + 1 + sizeof(EventManager::Event::topic)); //baseTopic(16)+/+Event.topic size
-  //while publish works and there is an event to send
-  while (publishSucceeded && (evtToSend = eventManager.Available()))
+  //while MQTTconnected and publish works and there is an event to send
+  while (mqttClient.connected() && publishSucceeded && (evtToSend = eventManager.Available()))
   {
     //build complete topic : baseTopic(with ending /) + topic in the event
     completeTopic = jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>();

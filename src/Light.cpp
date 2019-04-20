@@ -68,6 +68,9 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
     }
     Serial.println(')');
 
+    //save pointer to Eventmanager
+    _evtMgr = evtMgr;
+
     //copy id pointer
     _id = id;
 
@@ -85,9 +88,6 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
 
     //save pushButtonMode
     _pushButtonMode = pushButtonMode;
-
-    //save pointer to Eventmanager
-    _evtMgr = evtMgr;
 
     _initialized = true;
 }
