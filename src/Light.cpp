@@ -1,6 +1,6 @@
 #include "Light.h"
 
-void Light::ON()
+void Light::On()
 {
     if (digitalRead(_pinLight) == LOW)
     {
@@ -8,7 +8,7 @@ void Light::ON()
         _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "1");
     }
 }
-void Light::OFF()
+void Light::Off()
 {
     if (digitalRead(_pinLight) == HIGH)
     {
@@ -16,7 +16,7 @@ void Light::OFF()
         _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
     }
 }
-void Light::TOGGLE()
+void Light::Toggle()
 {
     digitalWrite(_pinLight, !digitalRead(_pinLight));
     _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), (digitalRead(_pinLight) == LOW) ? "0" : "1");
@@ -115,16 +115,16 @@ bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned i
             {
             //OFF requested
             case '0':
-                OFF();
+                Off();
                 break;
             //ON requested
             case '1':
-                ON();
+                On();
                 break;
-            //TOGGLE requested
+            //Toggle requested
             case 't':
             case 'T':
-                TOGGLE();
+                Toggle();
                 break;
             }
         }
@@ -141,7 +141,7 @@ bool Light::Run()
 
     //if button state changed AND (not a pushButton OR input rose)
     if (_btn.update() && (!_pushButtonMode || _btn.rose()))
-        TOGGLE(); //then invert output
+        Toggle(); //then invert output
 
     //no time critical state, so always false is returned
     return false;

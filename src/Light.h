@@ -22,9 +22,9 @@ class Light
     bool _pushButtonMode = false;
     EventManager *_evtMgr = NULL;
 
-    void ON();
-    void OFF();
-    void TOGGLE();
+    void On();
+    void Off();
+    void Toggle();
 
   public:
     Light(JsonVariant config, EventManager *evtMgr);
