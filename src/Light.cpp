@@ -1,5 +1,27 @@
 #include "Light.h"
 
+void Light::ON()
+{
+    if (digitalRead(_pinLight) == LOW)
+    {
+        digitalWrite(_pinLight, HIGH);
+        _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "1");
+    }
+}
+void Light::OFF()
+{
+    if (digitalRead(_pinLight) == HIGH)
+    {
+        digitalWrite(_pinLight, LOW);
+        _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
+    }
+}
+void Light::TOGGLE()
+{
+    digitalWrite(_pinLight, !digitalRead(_pinLight));
+    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), (digitalRead(_pinLight) == LOW) ? "0" : "1");
+}
+
 Light::Light(JsonVariant config, EventManager *evtMgr)
 {
     if (config["id"].isNull())
@@ -54,6 +76,7 @@ Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMo
     //setup output
     pinMode(_pinLight, OUTPUT);
     digitalWrite(_pinLight, LOW);
+    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
 
     //save pushButtonMode
     _pushButtonMode = pushButtonMode;
@@ -86,16 +109,16 @@ bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned i
             {
             //OFF requested
             case '0':
-                digitalWrite(_pinLight, LOW);
+                OFF();
                 break;
             //ON requested
             case '1':
-                digitalWrite(_pinLight, HIGH);
+                ON();
                 break;
             //TOGGLE requested
             case 't':
             case 'T':
-                digitalWrite(_pinLight, !digitalRead(_pinLight));
+                TOGGLE();
                 break;
             }
         }
@@ -112,5 +135,5 @@ void Light::Run()
 
     //if button state changed AND (not a pushButton OR input rose)
     if (_btn.update() && (!_pushButtonMode || _btn.rose()))
-        digitalWrite(_pinLight, !digitalRead(_pinLight)); //then invert output
+        TOGGLE(); //then invert output
 }

@@ -397,7 +397,20 @@ void loop()
   //publish Events
   EventManager::Event *evtToSend;
   bool publishSucceeded = true;
+  String completeTopic;
+  completeTopic.reserve(16 + 1 + sizeof(EventManager::Event::topic)); //baseTopic(16)+/+Event.topic size
+  //while publish works and there is an event to send
   while (publishSucceeded && (evtToSend = eventManager.Available()))
-    if ((publishSucceeded = mqttClient.publish(evtToSend->topic, evtToSend->payload)))
-      evtToSend->sent = true;
+  {
+    //build complete topic : baseTopic(with ending /) + topic in the event
+    completeTopic = jsonDoc[F("baseTopic")].as<const char *>();
+    if (completeTopic[completeTopic.length() - 1] != '/')
+      completeTopic += '/';
+    completeTopic += evtToSend->topic;
+    //publish
+    if ((publishSucceeded = mqttClient.publish(completeTopic.c_str(), evtToSend->payload)))
+      evtToSend->sent = true; //if that works, then tag event as sent
+    else
+      evtToSend->retryLeft--; //else decrease retry count
+  }
 }

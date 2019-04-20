@@ -13,10 +13,10 @@ class EventManager
   public:
     typedef struct
     {
-        char topic[16 + 1 + 16 + 1 + 5 + 1]; //baseTopic(16)+/+id(16)+/+state(longest topic for now)+0
-        char payload[5];                     //99.9 (longest payload for now)
-        bool sent;                           //event sent to HA or not
-        byte retryLeft;                      //number of retries left to send event to Home Automation
+        char topic[16 + 1 + 5 + 1]; //id(16)+/+state(longest topic for now)+0
+        char payload[5];            //99.9 (longest payload for now)
+        bool sent;                  //event sent to HA or not
+        byte retryLeft;             //number of retries left to send event to Home Automation
     } Event;
 
   private:

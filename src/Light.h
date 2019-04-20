@@ -22,6 +22,10 @@ class Light
     bool _pushButtonMode = false;
     EventManager *_evtMgr = NULL;
 
+    void ON();
+    void OFF();
+    void TOGGLE();
+
   public:
     Light(JsonVariant config, EventManager *evtMgr);
     Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr);
