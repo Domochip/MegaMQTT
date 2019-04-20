@@ -49,10 +49,10 @@ Light::Light(JsonVariant config, EventManager *evtMgr)
     pinLight = atoi(pinStr);
 
     //call Constructor with parsed values
-    Light(config["id"].as<const char *>(), pinBtn, pinLight, config["pushbutton"] | false, evtMgr);
+    Init(config["id"].as<const char *>(), pinBtn, pinLight, config["pushbutton"] | false, evtMgr);
 }
 
-Light::Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr)
+void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("new Light("));

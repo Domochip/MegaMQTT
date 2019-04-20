@@ -28,7 +28,7 @@ class Light
 
   public:
     Light(JsonVariant config, EventManager *evtMgr);
-    Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr);
+    void Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr);
     void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
     bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
     bool Run();

@@ -35,10 +35,10 @@ RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
     pinRollerPower = atoi(pinStr);
 
     //call Constructor with parsed values
-    RollerShutter(config["id"].as<const char *>(), pinBtnUp, pinBtnDown, pinRollerDir, pinRollerPower, evtMgr);
+    Init(config["id"].as<const char *>(), pinBtnUp, pinBtnDown, pinRollerDir, pinRollerPower, evtMgr);
 }
 
-RollerShutter::RollerShutter(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, EventManager *evtMgr)
+void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("new RollerShutter("));

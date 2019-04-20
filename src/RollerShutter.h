@@ -17,9 +17,8 @@ private:
   EventManager *_evtMgr = NULL;
 
 public:
-  RollerShutter(){};
   RollerShutter(JsonVariant config, EventManager *evtMgr);
-  RollerShutter(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, EventManager *evtMgr);
+  void Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, EventManager *evtMgr);
   void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
   bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
   bool Run();
