@@ -128,12 +128,15 @@ bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned i
     return false;
 }
 
-void Light::Run()
+bool Light::Run()
 {
     if (!_initialized)
-        return;
+        return false;
 
     //if button state changed AND (not a pushButton OR input rose)
     if (_btn.update() && (!_pushButtonMode || _btn.rose()))
         TOGGLE(); //then invert output
+
+    //no time critical state, so always false is returned
+    return false;
 }

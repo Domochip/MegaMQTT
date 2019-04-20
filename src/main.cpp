@@ -387,7 +387,22 @@ void setup()
 //---------LOOP---------
 void loop()
 {
+  bool timeCriticalOperationInProgress = false;
+
   //------------------------HOME AUTOMATION------------------------
+  if (nbLights)
+    for (uint8_t i = 0; i < nbLights; i++)
+      timeCriticalOperationInProgress |= lights[i]->Run();
+
+  if (nbRollerShutters)
+  {
+    for (uint8_t i = 0; i < nbRollerShutters; i++)
+      timeCriticalOperationInProgress |= rollerShutters[i]->Run();
+  }
+
+  //if time critical operation is in progress, so skip rest of code
+  if (timeCriticalOperationInProgress)
+    return;
 
   //------------------------WEBSERVER------------------------
   WebServerRun();

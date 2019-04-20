@@ -22,7 +22,7 @@ public:
   RollerShutter(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, EventManager *evtMgr);
   void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
   bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-  void Run();
+  bool Run();
 };
 
 #endif

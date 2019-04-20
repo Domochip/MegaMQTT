@@ -31,7 +31,7 @@ class Light
     Light(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr);
     void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
     bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-    void Run();
+    bool Run();
 };
 
 #endif

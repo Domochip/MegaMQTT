@@ -103,10 +103,10 @@ bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, un
     return false;
 }
 
-void RollerShutter::Run()
+bool RollerShutter::Run()
 {
     if (!_initialized)
-        return;
+        return false;
 
     if (_btnUp.update())
     {
@@ -124,4 +124,7 @@ void RollerShutter::Run()
             digitalWrite(_pinRollerPower, HIGH);
         }
     }
+
+    //TODO
+    return false;
 };
