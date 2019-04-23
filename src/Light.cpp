@@ -48,7 +48,7 @@ Light::Light(JsonVariant config, EventManager *evtMgr)
         return;
     pinLight = atoi(pinStr);
 
-    //call Constructor with parsed values
+    //call Init with parsed values
     Init(config["id"].as<const char *>(), pinBtn, pinLight, config["pushbutton"] | false, evtMgr);
 }
 

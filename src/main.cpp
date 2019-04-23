@@ -10,6 +10,7 @@
 
 #include "EventManager.h"
 
+#include "HADevice.h"
 #include "Light.h"
 #include "RollerShutter.h"
 
@@ -21,11 +22,9 @@ StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
 
 EventManager eventManager;
 
-//HA variables
-uint8_t nbLights = 0;
-Light **lights = NULL;
-uint8_t nbRollerShutters = 0;
-RollerShutter **rollerShutters = NULL;
+//HADevice variables
+uint8_t nbHADevices = 0;
+HADevice **haDevices = NULL;
 
 //ETHERNET variables
 byte mac[6];
@@ -76,27 +75,28 @@ bool ConfigParse(const char *jsonBuffer)
   return !jsonError;
 }
 
-void ConfigCreateHAObjects()
+void ConfigCreateHADevices()
 {
-  //if Light is in JSON and not empty
-  if (!jsonDoc[F("Light")].isNull() && jsonDoc[F("Light")].size())
+  //if HADevices is in JSON and not empty
+  if (!jsonDoc[F("HADevices")].isNull() && jsonDoc[F("HADevices")].size())
   {
-    nbLights = jsonDoc[F("Light")].size();
-    lights = new Light *[nbLights];
-    for (byte i = 0; i < nbLights; i++)
-    {
-      lights[i] = new Light(jsonDoc[F("Light")][i].as<JsonVariant>(), &eventManager);
-    }
-  }
+    //take number of HADevices to create
+    nbHADevices = jsonDoc[F("HADevices")].size();
 
-  //if RollerShutter is in JSON and not empty
-  if (!jsonDoc[F("RollerShutter")].isNull() && jsonDoc[F("RollerShutter")].size())
-  {
-    nbRollerShutters = jsonDoc[F("RollerShutter")].size();
-    rollerShutters = new RollerShutter *[nbRollerShutters];
-    for (byte i = 0; i < nbRollerShutters; i++)
+    //create array of pointer
+    haDevices = new HADevice *[nbHADevices];
+    //initialize pointers to NULL
+    memset(haDevices, 0, nbHADevices * sizeof(HADevice *));
+
+    //for each HADevices
+    for (uint8_t i = 0; i < nbHADevices; i++)
     {
-      rollerShutters[i] = new RollerShutter(jsonDoc[F("RollerShutter")][i].as<JsonVariant>(), &eventManager);
+      //if device type is Light
+      if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("Light")))
+        haDevices[i] = (HADevice *)new Light(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a Light
+      //if device type is RollerShutter
+      else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("RollerShutter")))
+        haDevices[i] = (HADevice *)new RollerShutter(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a RollerShutter
     }
   }
 }
@@ -287,34 +287,26 @@ bool MqttConnect()
   //Subscribe to needed topic
   if (mqttClient.connected())
   {
-    if (nbLights)
-      for (uint8_t i = 0; i < nbLights; i++)
-        lights[i]->MqttSubscribe(mqttClient, jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>());
-
-    if (nbRollerShutters)
-      for (uint8_t i = 0; i < nbRollerShutters; i++)
-        rollerShutters[i]->MqttSubscribe(mqttClient, jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>());
-    }
+    for (uint8_t i = 0; i < nbHADevices; i++)
+      if (haDevices[i])
+        haDevices[i]->MqttSubscribe(mqttClient, jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>());
+  }
 
   return mqttClient.connected();
 }
 
 void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
 {
-  bool messageHandled = false;
-
   const char *baseTopic = jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>();
   char *relevantPartOfTopic = topic + strlen(baseTopic);
   if (baseTopic[strlen(baseTopic) - 1] != '/')
     relevantPartOfTopic++;
 
-  if (nbLights)
-    for (uint8_t i = 0; i < nbLights && !messageHandled; i++)
-      messageHandled = lights[i]->MqttCallback(relevantPartOfTopic, payload, length);
+  bool messageHandled = false;
 
-  if (nbRollerShutters)
-    for (uint8_t i = 0; i < nbRollerShutters && !messageHandled; i++)
-      messageHandled = rollerShutters[i]->MqttCallback(relevantPartOfTopic, payload, length);
+  for (uint8_t i = 0; i < nbHADevices && !messageHandled; i++)
+    if (haDevices[i])
+      messageHandled = haDevices[i]->MqttCallback(relevantPartOfTopic, payload, length);
 }
 
 void MqttStart()
@@ -370,7 +362,7 @@ void setup()
   free(jsonBuffer);
 
   //Create Home Automation Objects
-  ConfigCreateHAObjects();
+  ConfigCreateHADevices();
 
   //Start Ethernet
   EthernetConnect();
@@ -388,17 +380,11 @@ void loop()
   bool timeCriticalOperationInProgress = false;
 
   //------------------------HOME AUTOMATION------------------------
-  if (nbLights)
-    for (uint8_t i = 0; i < nbLights; i++)
-      timeCriticalOperationInProgress |= lights[i]->Run();
+  for (uint8_t i = 0; i < nbHADevices; i++)
+    if (haDevices[i])
+      timeCriticalOperationInProgress |= haDevices[i]->Run();
 
-  if (nbRollerShutters)
-  {
-    for (uint8_t i = 0; i < nbRollerShutters; i++)
-      timeCriticalOperationInProgress |= rollerShutters[i]->Run();
-  }
-
-  //if time critical operation is in progress, so skip rest of code
+  //if time critical operation is in progress, then skip rest of code
   if (timeCriticalOperationInProgress)
     return;
 

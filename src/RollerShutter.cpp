@@ -34,7 +34,7 @@ RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
         return;
     pinRollerPower = atoi(pinStr);
 
-    //call Constructor with parsed values
+    //call Init with parsed values
     Init(config["id"].as<const char *>(), pinBtnUp, pinBtnDown, pinRollerDir, pinRollerPower, evtMgr);
 }
 

@@ -1,20 +1,15 @@
 #ifndef RollerShutter_h
 #define RollerShutter_h
 
-#include <ArduinoJson.h>
-#include <PubSubClient.h>
+#include "HADevice.h"
+
 #include <Bounce2.h>
 
-#include "EventManager.h"
-
-class RollerShutter
+class RollerShutter : HADevice
 {
 private:
-  bool _initialized = false;
-  const char *_id;
   Bounce _btnUp, _btnDown;
   uint8_t _pinRollerDir, _pinRollerPower;
-  EventManager *_evtMgr = NULL;
 
 public:
   RollerShutter(JsonVariant config, EventManager *evtMgr);
