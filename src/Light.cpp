@@ -68,6 +68,12 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
     }
     Serial.println(')');
 
+    //Check if pins are available
+    if (!IsPinAvailable(pinBtn))
+        return;
+    if (!IsPinAvailable(pinLight))
+        return;
+
     //save pointer to Eventmanager
     _evtMgr = evtMgr;
 

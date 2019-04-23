@@ -53,6 +53,19 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     Serial.print(pinRollerPower);
     Serial.println(')');
 
+    //Check if pins are available
+    if (!IsPinAvailable(pinBtnUp))
+        return;
+    if (!IsPinAvailable(pinBtnDown))
+        return;
+    if (!IsPinAvailable(pinRollerDir))
+        return;
+    if (!IsPinAvailable(pinRollerPower))
+        return;
+
+    //save EventManager
+    _evtMgr = evtMgr;
+
     //copy id pointer
     _id = id;
 
@@ -69,9 +82,6 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     //setup outputs
     pinMode(_pinRollerDir, OUTPUT);
     pinMode(_pinRollerPower, OUTPUT);
-
-    //save EventManager
-    _evtMgr = evtMgr;
 
     _initialized = true;
 }
