@@ -54,8 +54,7 @@ Light::Light(JsonVariant config, EventManager *evtMgr)
 
 void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr)
 {
-    //DEBUG
-    Serial.print(F("new Light("));
+    Serial.print(F("[Light] Init("));
     Serial.print(id);
     Serial.print(',');
     Serial.print(pinBtn);

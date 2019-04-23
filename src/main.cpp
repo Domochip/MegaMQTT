@@ -257,12 +257,12 @@ bool EthernetConnect()
 
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
-    Serial.println(F("Ethernet shield not found!!! Restart..."));
+    Serial.println(F("[EthernetConnect]Ethernet shield not found!!! Restart..."));
     SoftwareReset();
   }
 
   if (Ethernet.linkStatus() == LinkOFF)
-    Serial.println(F("Ethernet cable is not connected."));
+    Serial.println(F("[EthernetConnect]Ethernet cable is not connected."));
 
   return Ethernet.linkStatus() != LinkOFF;
 }
@@ -309,16 +309,16 @@ void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
       messageHandled = haDevices[i]->MqttCallback(relevantPartOfTopic, payload, length);
 }
 
-void MqttStart()
+bool MqttStart()
 {
   //setup MQTT client (PubSubClient)
   mqttClient.setClient(mqttEthClient).setServer(jsonDoc[F("MQTT")][F("hostname")].as<const char *>(), jsonDoc[F("MQTT")][F("port")]).setCallback(MqttCallback);
 
   //Then connect
   if (MqttConnect())
-    Serial.println(F("MQTT connected"));
-  else
-    Serial.println(F("MQTT not Connected"));
+    return true;
+
+  return false;
 }
 
 void MqttRun()
@@ -327,17 +327,17 @@ void MqttRun()
   if (needMqttReconnect)
   {
     needMqttReconnect = false;
-    Serial.print(F("MQTT Reconnection : "));
+    Serial.println(F("[MQTTRun] Reconnection"));
     if (MqttConnect())
-      Serial.println(F("OK"));
+      Serial.println(F("[MQTTRun] Reconnection : OK"));
     else
-      Serial.println(F("Failed"));
+      Serial.println(F("[MQTTRun] Reconnection : Failed"));
   }
 
   //if MQTT not connected and reconnect timer not started
   if (!mqttClient.connected() && !mqttReconnectTimer.isEnabled(0))
   {
-    Serial.println(F("MQTT Disconnected"));
+    Serial.println(F("[MQTTRun] Disconnected"));
     //set Timer to reconnect after 20 or 60 sec (Eth connected or not)
     mqttReconnectTimer.setTimeout((Ethernet.linkStatus() != LinkOFF) ? 20000 : 60000, []() { needMqttReconnect = true; mqttReconnectTimer.deleteTimer(0); });
   }
@@ -356,22 +356,38 @@ void setup()
   Serial.begin(115200);
 
   //Load JSON from EEPROM
+  Serial.println(F("[setup]Config JSON"));
   char *jsonBuffer = (char *)malloc(JSON_BUFFER_MAX_SIZE + 1);
   ConfigReadJson(jsonBuffer);
-  ConfigParse(jsonBuffer);
+  if (ConfigParse(jsonBuffer))
+    Serial.println(F("[setup]Config JSON : OK\n"));
+  else
+    Serial.println(F("[setup]Config JSON : FAILED\n"));
   free(jsonBuffer);
 
   //Create Home Automation Objects
+  Serial.println(F("[setup]HADevices"));
   ConfigCreateHADevices();
+  Serial.println(F("[setup]HADevices : Done\n"));
 
   //Start Ethernet
-  EthernetConnect();
+  Serial.println(F("[setup]Ethernet"));
+  if (EthernetConnect())
+    Serial.println(F("[setup]Ethernet : OK\n"));
+  else
+    Serial.println(F("[setup]Ethernet : FAILED\n"));
 
   //Start WebServer
+  Serial.println(F("[setup]WebServer"));
   WebServerStart();
+  Serial.println(F("[setup]WebServer : Started\n"));
 
   //Start MQTT
-  MqttStart();
+  Serial.println(F("[setup]MQTT client"));
+  if (MqttStart())
+    Serial.println(F("[setup]MQTT client : OK\n"));
+  else
+    Serial.println(F("[setup]MQTT client : FAILED\n"));
 }
 
 //---------LOOP---------

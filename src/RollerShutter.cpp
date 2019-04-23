@@ -41,7 +41,7 @@ RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
 void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, EventManager *evtMgr)
 {
     //DEBUG
-    Serial.print(F("new RollerShutter("));
+    Serial.print(F("[RollerShutter] Init("));
     Serial.print(id);
     Serial.print(',');
     Serial.print(pinBtnUp);
