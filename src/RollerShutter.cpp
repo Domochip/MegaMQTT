@@ -110,7 +110,7 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     Serial.print(pinRollerDir);
     Serial.print(',');
     Serial.print(pinRollerPower);
-    Serial.println(')');
+    Serial.println(') -> Closing Shutter to get it ready for operation');
 
     //Check if pins are available
     if (!IsPinAvailable(pinBtnUp))
@@ -145,12 +145,13 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     //save travel time
     _travelTime = travelTime;
 
+    _initialized = true;
+
+    //Close completely the Roller to initialize position
     //Go Down
     GoDown();
     //during full travelTime, then we are Ready
-    _outputTimer.SetTimeout(1000L * _travelTime);
-
-    _initialized = true;
+    _outputTimer.SetOnceTimeout(1000L * _travelTime);
 }
 
 void RollerShutter::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
@@ -211,9 +212,15 @@ bool RollerShutter::Run()
     if (!_ready)
     {
         if (_outputTimer.IsTimeoutOver())
+        {
+            Stop();
             _ready = true;
+            Serial.print(F("[RollerShutter] "));
+            Serial.print(_id);
+            Serial.println(F(" is ready"));
+        }
         else
-            return false;
+            return false; //While RollerShutter going to be ready, we don't need TimeCritical Operation
     }
 
     //_btnUp state changed
