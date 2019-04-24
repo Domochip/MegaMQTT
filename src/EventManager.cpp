@@ -13,8 +13,8 @@ EventManager::EventManager()
 
 void EventManager::AddEvent(const char *topic, const char *payload)
 {
-    strcpy(_eventsList[_nextEventPos].topic, topic);
-    strcpy(_eventsList[_nextEventPos].payload, payload);
+    strncpy(_eventsList[_nextEventPos].topic, topic, sizeof(Event::topic));
+    strncpy(_eventsList[_nextEventPos].payload, payload, sizeof(Event::payload));
     _eventsList[_nextEventPos].sent = false;
     _eventsList[_nextEventPos].retryLeft = MAX_RETRY_NUMBER;
 
