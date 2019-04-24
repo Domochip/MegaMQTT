@@ -10,12 +10,14 @@
         {
             "type":"RollerShutter",
             "id": "VR0",
-            "pins": "22,23,24,25"
+            "pins": "22,23,24,25",
+            "travelTime":30
         },
         {
             "type":"RollerShutter",
             "id": "VR1",
-            "pins": "26,27,28,29"
+            "pins": "26,27,28,29",
+            "travelTime":35
         },
         {
             "type":"Light",
