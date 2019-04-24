@@ -6,9 +6,15 @@
 #include <Bounce2.h>
 #include "VerySimpleTimer.h"
 
+//MQTT publish :
+//  ID/state
+//    0->100
+//MQTT subscribe :
+//  ID/command
+//    0->100
+
 #define DEBOUNCE_INTERVAL 25
 #define LONGPRESS_THRESHOLD 1000
-
 
 class RollerShutter : HADevice
 {

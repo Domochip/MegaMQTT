@@ -5,10 +5,12 @@
 
 #include <Bounce2.h>
 
-//Light publish :
-//  - /status
-//Light subscribe :
-//  - /command
+//MQTT publish :
+//  ID/state
+//    0,1
+//MQTT subscribe :
+//  ID/command
+//    0,1,t,T
 
 class Light : HADevice
 {
