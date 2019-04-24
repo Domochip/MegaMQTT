@@ -110,7 +110,7 @@ void Light::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
 
 bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
 {
-    //if relevantPartOfTopic starts with id of this Light ending with '/'
+    //if relevantPartOfTopic starts with id of this device ending with '/'
     if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
     {
         //if topic finishes by '/command'

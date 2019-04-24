@@ -100,7 +100,7 @@ void RollerShutter::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopi
 
 bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
 {
-    //if relevantPartOfTopic starts with id of this Light ending with '/'
+    //if relevantPartOfTopic starts with id of this device ending with '/'
     if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
     {
         //if topic finishes by '/command'
