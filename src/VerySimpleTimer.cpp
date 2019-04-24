@@ -15,6 +15,10 @@ void VerySimpleTimer::Reset()
     _nextMillis = millis() + _timeoutDuration;
     _active = true;
 };
+void VerySimpleTimer::Stop()
+{
+    _active = false;
+};
 bool VerySimpleTimer::IsTimeoutOver()
 {
     if (_active && millis() > _nextMillis)

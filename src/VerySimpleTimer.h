@@ -15,6 +15,7 @@ class VerySimpleTimer
     void SetOnceTimeout(uint16_t d);
     void SetTimeout(uint16_t d);
     void Reset();
+    void Stop();
     bool IsTimeoutOver();
     bool IsActive();
 };
