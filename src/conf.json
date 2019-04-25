@@ -23,6 +23,11 @@
             "type":"Light",
             "id": "L0",
             "pins": "2,13"
+        },
+        {
+            "type":"DS18B20Bus",
+            "id":"DSB0",
+            "pin":3
         }
     ]
 }

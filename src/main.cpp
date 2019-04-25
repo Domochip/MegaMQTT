@@ -13,6 +13,7 @@
 #include "HADevice.h"
 #include "Light.h"
 #include "RollerShutter.h"
+#include "DS18B20Bus.h"
 
 #define JSON_BUFFER_MAX_SIZE 1024
 #define JSON_DOCUMENT_MAX_SIZE 1024
@@ -97,6 +98,9 @@ void ConfigCreateHADevices()
       //if device type is RollerShutter
       else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("RollerShutter")))
         haDevices[i] = (HADevice *)new RollerShutter(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a RollerShutter
+      //if device type is DS18B20Bus
+      else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DS18B20Bus")))
+        haDevices[i] = (HADevice *)new DS18B20Bus(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DS18B20Bus
     }
   }
 }
