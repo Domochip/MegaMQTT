@@ -110,7 +110,7 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     Serial.print(pinRollerDir);
     Serial.print(',');
     Serial.print(pinRollerPower);
-    Serial.println(') -> Closing Shutter to get it ready for operation');
+    Serial.println(F(") -> Closing Shutter to get it ready for operation"));
 
     //Check if pins are available
     if (!IsPinAvailable(pinBtnUp))

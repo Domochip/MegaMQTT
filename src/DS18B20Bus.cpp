@@ -225,14 +225,18 @@ bool DS18B20Bus::Run()
 {
     if (_timer.IsTimeoutOver())
     {
+        Serial.print(F("[DS18B20Bus] "));
+        Serial.print(_id);
         if (_convertInProgress)
         {
+            Serial.println(F(" is publishing"));
             _convertInProgress = false;
             ReadAndPublishTemperatures();
             _timer.SetOnceTimeout((uint16_t)PUBLISH_PERIOD * 1000 - 800);
         }
         else
         {
+            Serial.println(F(" is converting"));
             _convertInProgress = true;
             StartConvertT();
             _timer.SetOnceTimeout(800);
