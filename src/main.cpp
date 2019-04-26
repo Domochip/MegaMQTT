@@ -8,6 +8,7 @@
 #include <PubSubClient.h>
 #include <SimpleTimer.h> //!\ MAX_TIMERS = 1 /!\.
 
+#include "WebServer.h"
 #include "EventManager.h"
 
 #include "HADevice.h"
@@ -31,8 +32,8 @@ HADevice **haDevices = NULL;
 byte mac[6];
 IPAddress ip(192, 168, 1, 177);
 
-//WEBSERVER variables
-EthernetServer webServer(80);
+//WebServer variable
+WebServer webServer;
 
 //MQTT variables
 EthernetClient mqttEthClient;
@@ -105,147 +106,6 @@ void ConfigCreateHADevices()
   }
 }
 
-//---------WEBSERVER---------
-void WebServerStart()
-{
-  // If webServer not yet started then start it
-  if (!webServer)
-    webServer.begin();
-}
-
-void WebServerRun()
-{
-  //take and check if a webClient is there
-  EthernetClient webClient = webServer.available();
-  if (!webClient)
-    return;
-
-  //if it's connected
-  if (webClient.connected())
-  {
-    //-------------------Receive and parse his request-------------------
-    bool isRequestHeaderFinished = false;
-    bool isPOSTRequest = false;
-    String requestURI; //URL requested
-    String requestBoundary;
-    String fileContent;
-
-    while (webClient.available() && !isRequestHeaderFinished)
-    {
-      String reqLine = webClient.readStringUntil('\n');
-
-      //DEBUG
-      // Serial.print(F("->"));
-      // Serial.println(reqLine);
-      // Serial.print(F("--+ Length : "));
-      // Serial.println(reqLine.length());
-
-      //Parse method and URI
-      if (reqLine.endsWith(F(" HTTP/1.1\r")))
-      {
-        if (reqLine.startsWith(F("GET ")))
-          requestURI = reqLine.substring(4, reqLine.length() - 10);
-        if (reqLine.startsWith(F("POST ")))
-        {
-          isPOSTRequest = true;
-          requestURI = reqLine.substring(5, reqLine.length() - 10);
-        }
-      }
-
-      //Parse boundary (if file is POSTed)
-      if (reqLine.startsWith(F("Content-Type: multipart/form-data; boundary=")))
-      {
-        requestBoundary = reqLine.substring(44, reqLine.length() - 1);
-      }
-
-      //Does request Header is finished
-      if (reqLine.length() == 1 && reqLine[0] == '\r')
-        isRequestHeaderFinished = true;
-    }
-
-    //Try to receive file content (only for POST request)
-    bool isFileContentReceived = false;
-    if (isPOSTRequest)
-    {
-      //look for boundary
-      if (webClient.find((char *)requestBoundary.c_str()))
-      {
-        //then go to next empty line (so skip it)
-        webClient.find((char *)"\r\n\r\n");
-
-        //complete requestBoundary to find its end
-        requestBoundary = "--" + requestBoundary + '\r';
-
-        //and finally read file content until boundary end string is found
-        while (webClient.available() && !isFileContentReceived)
-        {
-          //read content line
-          String dataLine = webClient.readStringUntil('\n');
-          //if it doesn't match end of boundary
-          if (dataLine.compareTo(requestBoundary))
-            fileContent += dataLine + '\n'; //add it to fileContent with removed \n
-          else
-            isFileContentReceived = true; //else end of file content is there
-        }
-      }
-    }
-
-    //-------------------Answer to the request-------------------
-    //if GET request
-    if (!isPOSTRequest)
-    {
-      webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nNothing Here Yet ;-)"));
-      delay(1);         //give webClient time to receive the data
-      webClient.stop(); //close the connection
-    }
-    else //else that is a POST request
-    {
-      //if JSON Config file POSTed
-      if (requestURI == F("/conf"))
-      {
-        //Try to deserialize it
-        DynamicJsonDocument dynJsonDoc(JSON_DOCUMENT_MAX_SIZE); //Caution : Heap already has fileContent and will get this JSON too...
-        DeserializationError jsonError = deserializeJson(dynJsonDoc, fileContent);
-        //if deserialization succeed
-        if (!jsonError)
-        {
-          Serial.println(F("Save JSON to EEPROM"));
-
-          //Save JSON to EEPROM
-          ConfigSaveJson(fileContent.c_str());
-
-          //Answer to the webClient
-          webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nJSON Config file saved"));
-
-          delay(1);         //give webClient time to receive the data
-          webClient.stop(); //close the connection
-
-          Serial.println(F("Reboot"));
-          SoftwareReset();
-        }
-        else
-          webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nIncorrect JSON Config file"));
-
-        //Clean Dynamic JSON Doc
-        dynJsonDoc.clear();
-      }
-    }
-
-    //DEBUG
-    Serial.print(F("Request Method : "));
-    Serial.println(isPOSTRequest ? F("POST") : F("GET"));
-    Serial.print(F("Request URI : "));
-    Serial.println(requestURI);
-    Serial.print(F("Request Boundary : "));
-    Serial.println(requestBoundary);
-    Serial.print(F("Request File received : "));
-    Serial.println(isFileContentReceived ? F("YES") : F("NO"));
-    Serial.print(F("Request File content : "));
-    Serial.println(fileContent);
-  }
-  webClient.stop();
-}
-
 //---------ETHERNET---------
 bool EthernetConnect()
 {
@@ -269,6 +129,50 @@ bool EthernetConnect()
     Serial.println(F("[EthernetConnect]Ethernet cable is not connected."));
 
   return Ethernet.linkStatus() != LinkOFF;
+}
+
+//---------WEBSERVER---------
+void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char *requestURI, bool isFileContentReceived, const char *fileContent)
+{
+  //if GET request
+  if (!isPOSTRequest)
+  {
+    webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nNothing Here Yet ;-)"));
+    delay(1);         //give webClient time to receive the data
+    webClient.stop(); //close the connection
+  }
+  else //else that is a POST request
+  {
+    //if JSON Config file POSTed
+    if (!strcmp_P(requestURI, PSTR("/conf")))
+    {
+      //Try to deserialize it
+      DynamicJsonDocument dynJsonDoc(JSON_DOCUMENT_MAX_SIZE); //Caution : Heap already has fileContent and will get this JSON too...
+      DeserializationError jsonError = deserializeJson(dynJsonDoc, fileContent);
+      //if deserialization succeed
+      if (!jsonError)
+      {
+        Serial.println(F("Save JSON to EEPROM"));
+
+        //Save JSON to EEPROM
+        ConfigSaveJson(fileContent);
+
+        //Answer to the webClient
+        webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nJSON Config file saved"));
+
+        delay(1);         //give webClient time to receive the data
+        webClient.stop(); //close the connection
+
+        Serial.println(F("Reboot"));
+        SoftwareReset();
+      }
+      else
+        webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nIncorrect JSON Config file"));
+
+      //Clean Dynamic JSON Doc
+      dynJsonDoc.clear();
+    }
+  }
 }
 
 //---------MQTT---------
@@ -383,7 +287,7 @@ void setup()
 
   //Start WebServer
   Serial.println(F("[setup]WebServer"));
-  WebServerStart();
+  webServer.Begin(WebServerCallback);
   Serial.println(F("[setup]WebServer : Started\n"));
 
   //Start MQTT
@@ -409,7 +313,7 @@ void loop()
     return;
 
   //------------------------WEBSERVER------------------------
-  WebServerRun();
+  webServer.Run();
 
   //------------------------MQTT------------------------
   MqttRun();
