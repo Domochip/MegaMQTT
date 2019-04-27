@@ -89,15 +89,15 @@ void WebServer::Run()
         }
 
         //DEBUG
-        Serial.print(F("Request Method : "));
+        Serial.print(F("[WebServer] Request Method : "));
         Serial.println(isPOSTRequest ? F("POST") : F("GET"));
-        Serial.print(F("Request URI : "));
+        Serial.print(F("[WebServer] Request URI : "));
         Serial.println(requestURI);
         if (isPOSTRequest)
         {
-            Serial.print(F("POSTed File received : "));
+            Serial.print(F("[WebServer] POSTed File received : "));
             Serial.println(isFileContentReceived ? F("YES") : F("NO"));
-            Serial.print(F("POSTed File content : "));
+            Serial.print(F("[WebServer] POSTed File content : "));
             Serial.println(fileContent);
         }
 
