@@ -1,0 +1,43 @@
+<h3>Upload a new Configuration : </h3>
+<form class="pure-form pure-form-aligned" id="f" method='POST' action='/conf' enctype='multipart/form-data'>
+    <fieldset>
+        <div class="pure-control-group">
+            <label for="name">Configuration File</label>
+            <input type='file' name='fi' id='fi' accept='.json' required>
+        </div>
+        <div class="pure-controls">
+            <input type='submit' name='sub' id='sub' value='Upload Configuration' class="pure-button pure-button-primary">
+        </div>
+    </fieldset>
+</form>
+<span id='r'></span>
+
+<script>
+    //QuerySelector Prefix is added by load function to know into what element queySelector need to look for
+    //var qsp = '#contentX ';
+
+    $(qsp+"#f").addEventListener('submit',function (evt) {
+        evt.preventDefault();
+        $(qsp+'#fi').readOnly = true;
+        $(qsp+'#sub').disabled = true;
+        post('/conf',
+            new FormData($(qsp+'#f')),
+            function () {
+                $(qsp+'#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">10</span>sec.</h3>';
+                runScript('var count=9;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
+                $(qsp+'#f').reset();
+            },
+            function (responseText) {
+                $(qsp+'#r').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
+                $(qsp+'#f').reset();
+                $(qsp+'#fi').readOnly = false;
+                $(qsp+'#sub').disabled = false;
+            },
+            30000,
+            function (evt) {
+                $(qsp+'#r').innerHTML = 'In Progress';
+                if (evt.lengthComputable) $(qsp+'#r').innerHTML += ' : ' + evt.loaded / evt.total * 100 + '%';
+            }
+        );
+    });
+</script>

@@ -20,6 +20,10 @@
 #include "data\pure-min.css.gz.h"
 #include "data\side-menu.css.gz.h"
 #include "data\side-menu.js.gz.h"
+#include "data\index.html.gz.h"
+#include "data\status0.html.gz.h"
+#include "data\status1.html.gz.h"
+#include "data\config0.html.gz.h"
 
 #define GLOBAL_BUFFER_SIZE 1025 //minimum size is 1024 (web)
 #define JSON_DOCUMENT_MAX_SIZE 1024
@@ -145,48 +149,94 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
   //if GET request
   if (!isPOSTRequest)
   {
-    //webClient.write can't read from PROGMEM, so we need to use buffer (global one)
+
+    //look for the right URI and :
+    // - put header into globalBuffer
+    // - set content pointer into contentPtr
+    // - set content size into contentSize
+    // - do not return 404
+
+    bool return404 = true;
+    const uint8_t *contentPtr = NULL;
+    uint16_t contentSize = 0;
+
     if (!strcmp_P(requestURI, PSTR("/pure-min.css")))
     {
-      //Send Header
+      //build Header
       sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nCache-Control: max-age=604800, public\r\nContent-Type: text/css\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(puremincssgz));
-      webClient.write(globalBuffer, strlen(globalBuffer));
-
-      //Then Send Data
-      for (uint16_t pos = 0; pos < sizeof(puremincssgz); pos += 1024)
-      {
-        memcpy_P(globalBuffer, puremincssgz + pos, ((pos + 1024) < sizeof(puremincssgz)) ? 1024 : (sizeof(puremincssgz) - pos));
-        webClient.write(globalBuffer, ((pos + 1024) < sizeof(puremincssgz)) ? 1024 : (sizeof(puremincssgz) - pos));
-      }
+      contentPtr = puremincssgz;
+      contentSize = sizeof(puremincssgz);
+      return404 = false;
     }
     else if (!strcmp_P(requestURI, PSTR("/side-menu.css")))
     {
-      //Send Header
+      //build Header
       sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nCache-Control: max-age=604800, public\r\nContent-Type: text/css\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(sidemenucssgz));
-      webClient.write(globalBuffer, strlen(globalBuffer));
-
-      //Then Send Data
-      for (uint16_t pos = 0; pos < sizeof(sidemenucssgz); pos += 1024)
-      {
-        memcpy_P(globalBuffer, sidemenucssgz + pos, ((pos + 1024) < sizeof(sidemenucssgz)) ? 1024 : (sizeof(sidemenucssgz) - pos));
-        webClient.write(globalBuffer, ((pos + 1024) < sizeof(sidemenucssgz)) ? 1024 : (sizeof(sidemenucssgz) - pos));
-      }
+      contentPtr = sidemenucssgz;
+      contentSize = sizeof(sidemenucssgz);
+      return404 = false;
     }
     else if (!strcmp_P(requestURI, PSTR("/side-menu.js")))
     {
-      //Send Header
+      //build Header
       sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nCache-Control: max-age=604800, public\r\nContent-Type: text/javascript\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(sidemenujsgz));
+      contentPtr = sidemenujsgz;
+      contentSize = sizeof(sidemenujsgz);
+      return404 = false;
+    }
+    else if (!strcmp_P(requestURI, PSTR("/")))
+    {
+      //build Header
+      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(indexhtmlgz));
+      contentPtr = indexhtmlgz;
+      contentSize = sizeof(indexhtmlgz);
+      return404 = false;
+    }
+    else if (!strcmp_P(requestURI, PSTR("/status0.html")))
+    {
+      //build Header
+      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(status0htmlgz));
+      contentPtr = status0htmlgz;
+      contentSize = sizeof(status0htmlgz);
+      return404 = false;
+    }
+    else if (!strcmp_P(requestURI, PSTR("/status1.html")))
+    {
+      //build Header
+      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(status1htmlgz));
+      contentPtr = status1htmlgz;
+      contentSize = sizeof(status1htmlgz);
+      return404 = false;
+    }
+    else if (!strcmp_P(requestURI, PSTR("/config0.html")))
+    {
+      //build Header
+      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(config0htmlgz));
+      contentPtr = config0htmlgz;
+      contentSize = sizeof(config0htmlgz);
+      return404 = false;
+    }
+
+    //Answer to the client
+    if (!return404)
+    {
+      //Send Header
       webClient.write(globalBuffer, strlen(globalBuffer));
 
-      //Then Send Data
-      for (uint16_t pos = 0; pos < sizeof(sidemenujsgz); pos += 1024)
+      //Then Send Content
+      for (uint16_t pos = 0; pos < contentSize; pos += 1024)
       {
-        memcpy_P(globalBuffer, sidemenujsgz + pos, ((pos + 1024) < sizeof(sidemenujsgz)) ? 1024 : (sizeof(sidemenujsgz) - pos));
-        webClient.write(globalBuffer, ((pos + 1024) < sizeof(sidemenujsgz)) ? 1024 : (sizeof(sidemenujsgz) - pos));
+        memcpy_P(globalBuffer, contentPtr + pos, ((pos + 1024) < contentSize) ? 1024 : (contentSize - pos));
+        webClient.write(globalBuffer, ((pos + 1024) < contentSize) ? 1024 : (contentSize - pos));
       }
     }
     else
-      webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nNothing Here Yet ;-)"));
+    {
+      //build 404 answer
+      strcpy_P(globalBuffer, PSTR("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\nAccept-Ranges: none\r\n\r\n"));
+      //Send it
+      webClient.write(globalBuffer, strlen(globalBuffer));
+    }
 
     delay(1);         //give webClient time to receive the data
     webClient.stop(); //close the connection
