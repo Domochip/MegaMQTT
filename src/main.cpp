@@ -18,6 +18,8 @@
 
 //Web Resources
 #include "data\pure-min.css.gz.h"
+#include "data\side-menu.css.gz.h"
+#include "data\side-menu.js.gz.h"
 
 #define GLOBAL_BUFFER_SIZE 1025 //minimum size is 1024 (web)
 #define JSON_DOCUMENT_MAX_SIZE 1024
@@ -143,12 +145,11 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
   //if GET request
   if (!isPOSTRequest)
   {
+    //webClient.write can't read from PROGMEM, so we need to use buffer (global one)
     if (!strcmp_P(requestURI, PSTR("/pure-min.css")))
     {
-      //webClient.write can't read from PROGMEM, so we need to use buffer (global one)
-
       //Send Header
-      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nContent-Type: text/css\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(puremincssgz));
+      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nCache-Control: max-age=604800, public\r\nContent-Type: text/css\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(puremincssgz));
       webClient.write(globalBuffer, strlen(globalBuffer));
 
       //Then Send Data
@@ -156,6 +157,32 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
       {
         memcpy_P(globalBuffer, puremincssgz + pos, ((pos + 1024) < sizeof(puremincssgz)) ? 1024 : (sizeof(puremincssgz) - pos));
         webClient.write(globalBuffer, ((pos + 1024) < sizeof(puremincssgz)) ? 1024 : (sizeof(puremincssgz) - pos));
+      }
+    }
+    else if (!strcmp_P(requestURI, PSTR("/side-menu.css")))
+    {
+      //Send Header
+      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nCache-Control: max-age=604800, public\r\nContent-Type: text/css\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(sidemenucssgz));
+      webClient.write(globalBuffer, strlen(globalBuffer));
+
+      //Then Send Data
+      for (uint16_t pos = 0; pos < sizeof(sidemenucssgz); pos += 1024)
+      {
+        memcpy_P(globalBuffer, sidemenucssgz + pos, ((pos + 1024) < sizeof(sidemenucssgz)) ? 1024 : (sizeof(sidemenucssgz) - pos));
+        webClient.write(globalBuffer, ((pos + 1024) < sizeof(sidemenucssgz)) ? 1024 : (sizeof(sidemenucssgz) - pos));
+      }
+    }
+    else if (!strcmp_P(requestURI, PSTR("/side-menu.js")))
+    {
+      //Send Header
+      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nCache-Control: max-age=604800, public\r\nContent-Type: text/javascript\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(sidemenujsgz));
+      webClient.write(globalBuffer, strlen(globalBuffer));
+
+      //Then Send Data
+      for (uint16_t pos = 0; pos < sizeof(sidemenujsgz); pos += 1024)
+      {
+        memcpy_P(globalBuffer, sidemenujsgz + pos, ((pos + 1024) < sizeof(sidemenujsgz)) ? 1024 : (sizeof(sidemenujsgz) - pos));
+        webClient.write(globalBuffer, ((pos + 1024) < sizeof(sidemenujsgz)) ? 1024 : (sizeof(sidemenujsgz) - pos));
       }
     }
     else
