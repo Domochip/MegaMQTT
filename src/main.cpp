@@ -16,6 +16,9 @@
 #include "RollerShutter.h"
 #include "DS18B20Bus.h"
 
+//Web Resources
+#include "data\pure-min.css.gz.h"
+
 #define JSON_BUFFER_MAX_SIZE 1024
 #define JSON_DOCUMENT_MAX_SIZE 1024
 
@@ -137,7 +140,32 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
   //if GET request
   if (!isPOSTRequest)
   {
-    webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nNothing Here Yet ;-)"));
+    if (!strcmp_P(requestURI, PSTR("/pure-min.css")))
+    {
+      //webClient.write can't read from PROGMEM, so we need to use a buffer of 1024 to send answer
+      char *buffer = new char[1024];
+
+      strcpy_P(buffer,PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\n"));
+      webClient.write(buffer,strlen(buffer));
+
+      strcpy_P(buffer,PSTR("Content-Type: text/css\r\nContent-Encoding: gzip\r\nContent-Length: "));
+      webClient.write(buffer,strlen(buffer));
+
+      webClient.print((uint16_t)sizeof(puremincssgz));
+      
+      strcpy_P(buffer,PSTR("\r\n\r\n"));
+      webClient.write(buffer,strlen(buffer));
+
+      for (uint16_t pos = 0; pos < sizeof(puremincssgz); pos += 1024)
+      {
+        memcpy_P(buffer, puremincssgz + pos, ((pos + 1024) < sizeof(puremincssgz)) ? 1024 : (sizeof(puremincssgz) - pos));
+        webClient.write(buffer, ((pos + 1024) < sizeof(puremincssgz)) ? 1024 : (sizeof(puremincssgz) - pos));
+      }
+      delete[] buffer;
+    }
+    else
+      webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nNothing Here Yet ;-)"));
+
     delay(1);         //give webClient time to receive the data
     webClient.stop(); //close the connection
   }
@@ -265,13 +293,13 @@ void setup()
 
   //Load JSON from EEPROM
   Serial.println(F("[setup]Config JSON"));
-  char *jsonBuffer = (char *)malloc(JSON_BUFFER_MAX_SIZE + 1);
+  char *jsonBuffer = new char[JSON_BUFFER_MAX_SIZE + 1];
   ConfigReadJson(jsonBuffer);
   if (ConfigParse(jsonBuffer))
     Serial.println(F("[setup]Config JSON : OK\n"));
   else
     Serial.println(F("[setup]Config JSON : FAILED\n"));
-  free(jsonBuffer);
+  delete[] jsonBuffer;
 
   //Create Home Automation Objects
   Serial.println(F("[setup]HADevices"));

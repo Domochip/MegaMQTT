@@ -93,12 +93,13 @@ void WebServer::Run()
         Serial.println(isPOSTRequest ? F("POST") : F("GET"));
         Serial.print(F("Request URI : "));
         Serial.println(requestURI);
-        Serial.print(F("Request Boundary : "));
-        Serial.println(requestBoundary);
-        Serial.print(F("Request File received : "));
-        Serial.println(isFileContentReceived ? F("YES") : F("NO"));
-        Serial.print(F("Request File content : "));
-        Serial.println(fileContent);
+        if (isPOSTRequest)
+        {
+            Serial.print(F("POSTed File received : "));
+            Serial.println(isFileContentReceived ? F("YES") : F("NO"));
+            Serial.print(F("POSTed File content : "));
+            Serial.println(fileContent);
+        }
 
         //-------------------Execute CallBack to make request answer-------------------
         if (_callback)
