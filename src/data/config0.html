@@ -20,24 +20,42 @@
         evt.preventDefault();
         $(qsp+'#fi').readOnly = true;
         $(qsp+'#sub').disabled = true;
-        post('/conf',
-            new FormData($(qsp+'#f')),
-            function () {
-                $(qsp+'#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">10</span>sec.</h3>';
-                runScript('var count=9;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
-                $(qsp+'#f').reset();
-            },
-            function (responseText) {
-                $(qsp+'#r').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
-                $(qsp+'#f').reset();
-                $(qsp+'#fi').readOnly = false;
-                $(qsp+'#sub').disabled = false;
-            },
-            30000,
-            function (evt) {
-                $(qsp+'#r').innerHTML = 'In Progress';
-                if (evt.lengthComputable) $(qsp+'#r').innerHTML += ' : ' + evt.loaded / evt.total * 100 + '%';
-            }
-        );
+
+        //read file content
+        var reader = new FileReader();
+
+        //function will be called when file has been readed (available in evtReader.target.result)
+        reader.onload=function(evtReader){
+
+            //minify JSON content
+            var minifiedConfigJSON = JSON.stringify(JSON.parse(evtReader.target.result));
+
+            //create FormData to send minified content
+            var formDataToSend = new FormData();
+            formDataToSend.append("configJSON",new Blob([minifiedConfigJSON],{type:"application/json"}));
+            
+            post('/conf',
+                formDataToSend,
+                function () {
+                    $(qsp+'#r').innerHTML = '<h3><span style="color: green;"><b>Done</b></span> System is rebooting. This page will be reloaded in <span id="cd">10</span>sec.</h3>';
+                    runScript('var count=9;var cdi=setInterval(function(){$("#cd").innerText=count;if(!count){clearInterval(cdi);location.reload();}count--;},1000);');
+                    $(qsp+'#f').reset();
+                },
+                function (responseText) {
+                    $(qsp+'#r').innerHTML = '<span style="color: red;"><b>Failed</b></span> (' + responseText + ')';
+                    $(qsp+'#f').reset();
+                    $(qsp+'#fi').readOnly = false;
+                    $(qsp+'#sub').disabled = false;
+                },
+                30000,
+                function (evt) {
+                    $(qsp+'#r').innerHTML = 'In Progress';
+                    if (evt.lengthComputable) $(qsp+'#r').innerHTML += ' : ' + evt.loaded / evt.total * 100 + '%';
+                }
+            );
+        };
+        
+        //start to read content
+        reader.readAsText($("#fi").files[0]);
     });
 </script>
