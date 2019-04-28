@@ -16,6 +16,7 @@
 #include "RollerShutter.h"
 #include "DS18B20Bus.h"
 #include "PilotWire.h"
+#include "DigitalOut.h"
 
 //Web Resources
 #include "data\pure-min.css.gz.h"
@@ -118,6 +119,9 @@ void ConfigCreateHADevices()
       //if device type is PilotWire
       else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("PilotWire")))
         haDevices[i] = (HADevice *)new PilotWire(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a PilotWire
+      //if device type is DigitalOut
+      else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DigitalOut")))
+        haDevices[i] = (HADevice *)new DigitalOut(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DigitalOut
     }
   }
 }

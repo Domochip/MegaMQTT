@@ -32,7 +32,12 @@
         {
             "type": "PilotWire",
             "id": "PW0",
-            "pins": "12,13"
+            "pins": "30,31"
+        },
+        {
+            "type": "DigitalOut",
+            "id": "D0",
+            "pin": 13
         }
     ]
 }
