@@ -272,8 +272,7 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
             Serial.println(F("GlobalBufferAllocator can't go over globalBuffer size"));
             SoftwareReset();
           }
-          else
-            return (void *)globalBuffer;
+          return (void *)globalBuffer;
         }
         void deallocate(void *p) {}
       };
