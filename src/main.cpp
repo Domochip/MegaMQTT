@@ -450,18 +450,16 @@ void loop()
   //publish Events
   EventManager::Event *evtToSend;
   bool publishSucceeded = true;
-  String completeTopic;
-  completeTopic.reserve(16 + 1 + sizeof(EventManager::Event::topic)); //baseTopic(16)+/+Event.topic size
   //while MQTTconnected and publish works and there is an event to send
   while (mqttClient.connected() && publishSucceeded && (evtToSend = eventManager.Available()))
   {
-    //build complete topic : baseTopic(with ending /) + topic in the event
-    completeTopic = configJSON[F("MQTT")][F("baseTopic")].as<const char *>();
-    if (completeTopic[completeTopic.length() - 1] != '/')
-      completeTopic += '/';
-    completeTopic += evtToSend->topic;
+    //build complete topic in globalBuffer : baseTopic(with ending /) + topic in the event
+    strcpy(globalBuffer, configJSON[F("MQTT")][F("baseTopic")].as<const char *>());
+    if (globalBuffer[strlen(globalBuffer) - 1] != '/')
+      strcat_P(globalBuffer, PSTR("/"));
+    strcat(globalBuffer, evtToSend->topic);
     //publish
-    if ((publishSucceeded = mqttClient.publish(completeTopic.c_str(), evtToSend->payload)))
+    if ((publishSucceeded = mqttClient.publish(globalBuffer, evtToSend->payload)))
       evtToSend->sent = true; //if that works, then tag event as sent
     else
       evtToSend->retryLeft--; //else decrease retry count
