@@ -126,26 +126,25 @@ void ConfigCreateHADevices()
 }
 
 //---------ETHERNET---------
-bool EthernetConnect()
+bool EthernetConnect(uint8_t *mac, IPAddress ip)
 {
-  //build MAC address based on hidden ATMega2560 serial number
-  mac[0] = 0xDE;
-  mac[1] = 0xAD;
-  mac[2] = 0xBE;
-  mac[3] = 0xEF;
-  mac[4] = boot_signature_byte_get(0x16);
-  mac[5] = boot_signature_byte_get(0x17);
+  Serial.print(F("[EthernetConnect] Starting with MAC="));
+  sprintf_P(globalBuffer, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  Serial.print(globalBuffer);
+  Serial.print(F(" and ip="));
+  ip.printTo(Serial);
+  Serial.println();
 
   Ethernet.begin(mac, ip);
 
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
-    Serial.println(F("[EthernetConnect]Ethernet shield not found!!! Restart..."));
+    Serial.println(F("[EthernetConnect] Ethernet shield not found!!! Restart..."));
     SoftwareReset();
   }
 
   if (Ethernet.linkStatus() == LinkOFF)
-    Serial.println(F("[EthernetConnect]Ethernet cable is not connected."));
+    Serial.println(F("[EthernetConnect] Ethernet cable is not connected."));
 
   return Ethernet.linkStatus() != LinkOFF;
 }
@@ -377,7 +376,24 @@ void setup()
 
   //Start Ethernet
   Serial.println(F("[setup]Ethernet"));
-  if (EthernetConnect())
+
+  //build MAC address based on hidden ATMega2560 serial number
+  mac[0] = 0xDE;
+  mac[1] = 0xAD;
+  mac[2] = 0xBE;
+  mac[3] = 0xEF;
+  mac[4] = boot_signature_byte_get(0x16);
+  mac[5] = boot_signature_byte_get(0x17);
+
+  //look for static ip in config JSON
+  if (!jsonDoc[F("System")][F("ip")].isNull())
+  {
+    IPAddress tmpIP;
+    if (tmpIP.fromString(jsonDoc[F("System")][F("ip")].as<const char *>()))
+      ip = tmpIP;
+  }
+
+  if (EthernetConnect(mac, ip))
     Serial.println(F("[setup]Ethernet : OK\n"));
   else
     Serial.println(F("[setup]Ethernet : FAILED\n"));

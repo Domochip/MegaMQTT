@@ -1,10 +1,14 @@
 {
+    "System": {
+        "name": "MegaMQTT1",
+        "ip": "192.168.1.176"
+    },
     "MQTT": {
         "hostname": "192.168.1.19",
         "port": 1883,
         "username": "",
         "password": "",
-        "baseTopic": "megaMQTT1"
+        "baseTopic": "MegaMQTT"
     },
     "HADevices": [
         {
@@ -22,7 +26,8 @@
         {
             "type": "Light",
             "id": "L0",
-            "pins": "2,11"
+            "pins": "2,11",
+            "pushbutton": false
         },
         {
             "type": "DS18B20Bus",
