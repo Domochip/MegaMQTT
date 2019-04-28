@@ -72,7 +72,7 @@ void WebServer::Run()
                 webClient.find((char *)"\r\n\r\n");
 
                 //complete requestBoundary to find its end
-                requestBoundary = "--" + requestBoundary + '\r';
+                requestBoundary = "--" + requestBoundary + "--\r";
 
                 //and finally read file content until boundary end string is found
                 while (webClient.available() && !isFileContentReceived)
