@@ -26,6 +26,8 @@
 #include "data\status0.html.gz.h"
 #include "data\config0.html.gz.h"
 
+#define DEFAULT_IP "192.168.1.177"
+
 #define GLOBAL_BUFFER_SIZE 1025 //minimum size is 1024 (web)
 #define JSON_DOCUMENT_MAX_SIZE 1024
 
@@ -43,7 +45,7 @@ HADevice **haDevices = NULL;
 
 //ETHERNET variables
 byte mac[6];
-IPAddress ip(192, 168, 1, 177);
+IPAddress ip;
 
 //WebServer variable
 WebServer webServer;
@@ -64,7 +66,7 @@ void SoftwareReset()
 }
 
 //---------CONFIG---------
-void ConfigReadJson(char *jsonBuffer)
+bool ConfigReadAndParseFromEEPROM(char *jsonBuffer)
 {
   uint16_t i = 0;
   while (EEPROM[i])
@@ -73,6 +75,11 @@ void ConfigReadJson(char *jsonBuffer)
     i++;
   }
   EEPROM[i] = 0;
+
+  DeserializationError jsonError = deserializeJson(configJSON, (const char *)jsonBuffer);
+  if (jsonError)
+    Serial.println(F("JSON parsing failed"));
+  return !jsonError;
 }
 
 void ConfigSaveJson(const char *json)
@@ -80,14 +87,6 @@ void ConfigSaveJson(const char *json)
   for (uint16_t i = 0; i < strlen(json); i++)
     EEPROM[i] = json[i];
   EEPROM[strlen(json)] = 0;
-}
-
-bool ConfigParse(const char *jsonBuffer)
-{
-  DeserializationError jsonError = deserializeJson(configJSON, jsonBuffer);
-  if (jsonError)
-    Serial.println(F("JSON parsing failed"));
-  return !jsonError;
 }
 
 void ConfigCreateHADevices()
@@ -126,16 +125,34 @@ void ConfigCreateHADevices()
 }
 
 //---------ETHERNET---------
-bool EthernetConnect(uint8_t *mac, IPAddress ip)
+bool EthernetConnect(uint8_t *mac, IPAddress &requestedIP)
 {
   Serial.print(F("[EthernetConnect] Starting with MAC="));
   sprintf_P(globalBuffer, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   Serial.print(globalBuffer);
-  Serial.print(F(" and ip="));
-  ip.printTo(Serial);
-  Serial.println();
 
-  Ethernet.begin(mac, ip);
+  //if no requestedIP configured
+  if (!requestedIP[0] && !requestedIP[1] && !requestedIP[2] && !requestedIP[3])
+    // {
+    //   Serial.println(F(" and DHCP"));
+    //   //try DHCP
+    //   if (Ethernet.begin(mac) == 0)
+    //   {
+    //     //if DHCP failed, use default IP
+    requestedIP.fromString(DEFAULT_IP);
+  //     Serial.print(F("[EthernetConnect] DHCP failed, switch to default IP ("));
+  //     requestedIP.printTo(Serial);
+  //     Serial.println(')');
+  //     Ethernet.begin(mac, requestedIP);
+  //   }
+  // }
+  // else
+  // {
+  Serial.print(F(" and ip="));
+  requestedIP.printTo(Serial);
+  Serial.println();
+  Ethernet.begin(mac, requestedIP);
+  //}
 
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
@@ -363,8 +380,7 @@ void setup()
 
   //Load JSON from EEPROM
   Serial.println(F("[setup]Config JSON"));
-  ConfigReadJson(globalBuffer);
-  if (ConfigParse(globalBuffer))
+  if (ConfigReadAndParseFromEEPROM(globalBuffer))
     Serial.println(F("[setup]Config JSON : OK\n"));
   else
     Serial.println(F("[setup]Config JSON : FAILED\n"));
@@ -385,12 +401,13 @@ void setup()
   mac[4] = boot_signature_byte_get(0x16);
   mac[5] = boot_signature_byte_get(0x17);
 
+  //use global IPAddress ip
   //look for static ip in config JSON
   if (!configJSON[F("System")][F("ip")].isNull())
   {
     IPAddress tmpIP;
-    if (tmpIP.fromString(configJSON[F("System")][F("ip")].as<const char *>()))
-      ip = tmpIP;
+    if (!ip.fromString(configJSON[F("System")][F("ip")].as<const char *>()))
+      ip[0] = ip[1] = ip[2] = ip[3] = 0;
   }
 
   if (EthernetConnect(mac, ip))
