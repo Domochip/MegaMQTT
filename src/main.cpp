@@ -26,6 +26,8 @@
 #include "data\status0.html.gz.h"
 #include "data\config0.html.gz.h"
 
+#define VERSION "0.0"
+
 #define DEFAULT_IP "192.168.1.177"
 
 //this size is used to dimension 2 static memory allocation : (so consumption is 2 * GLOBAL_BUFFER_AND_JSONDOC_SIZE)
@@ -233,6 +235,19 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
       contentSize = sizeof(config0htmlgz);
       return404 = false;
     }
+    else if (!strcmp_P(requestURI, PSTR("/gs0")))
+    {
+      unsigned long minutes = millis() / 60000;
+      uint16_t jsonSize;
+
+      //define size of resultantJSON
+      sprintf_P(globalBuffer, PSTR("{\"n\":\"%s\",\"b\":\"%s\",\"u\":\"%dd%02dh%02dm\"}"), configJSON[F("System")][F("name")].as<const char *>(), VERSION, (minutes / 1440), (minutes / 60 % 24), (minutes % 60));
+      jsonSize = strlen(globalBuffer);
+      //build Header+Content
+      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nCache-Control: no-cache\r\nContent-Type: text/json\r\nContent-Length: %d\r\n\r\n"), jsonSize);
+      sprintf_P(globalBuffer + strlen(globalBuffer), PSTR("{\"n\":\"%s\",\"b\":\"%s\",\"u\":\"%dd%02dh%02dm\"}"), configJSON[F("System")][F("name")].as<const char *>(), VERSION, (minutes / 1440), (minutes / 60 % 24), (minutes % 60));
+      return404 = false;
+    }
 
     //Answer to the client
     if (!return404)
@@ -276,15 +291,22 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
         }
         void deallocate(void *p) {}
       };
-      typedef BasicJsonDocument<GlobalBufferAllocator> DynamicJsonDocumentInGlobalBuffer;
+      typedef BasicJsonDocument<GlobalBufferAllocator> JsonDocumentInGlobalBuffer;
 
       //Try to deserialize it
-      DynamicJsonDocumentInGlobalBuffer dynJsonDoc(GLOBAL_BUFFER_AND_JSONDOC_SIZE); //Warning : Heap already has fileContent and will get this JSON too...
-      DeserializationError jsonError = deserializeJson(dynJsonDoc, fileContent);
+      JsonDocumentInGlobalBuffer configJSONInGlobalBuffer(GLOBAL_BUFFER_AND_JSONDOC_SIZE); //Warning : Heap already has fileContent and will get this JSON too...
+      DeserializationError jsonError = deserializeJson(configJSONInGlobalBuffer, fileContent);
       //if deserialization succeed
       if (!jsonError)
       {
-        Serial.println(F("Save JSON to EEPROM"));
+        if (configJSONInGlobalBuffer[F("System")][F("name")].isNull())
+        {
+          Serial.println(F("[WebServerCallback] System/name is missing from new JSON"));
+          webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nSystem/name is missing from JSON Config file"));
+          return;
+        }
+
+        Serial.println(F("[WebServerCallback] Save JSON to EEPROM"));
 
         //Save JSON to EEPROM
         ConfigSaveJson(fileContent);
@@ -295,14 +317,11 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
         delay(1);         //give webClient time to receive the data
         webClient.stop(); //close the connection
 
-        Serial.println(F("Reboot"));
+        Serial.println(F("[WebServerCallback] Reboot"));
         SoftwareReset();
       }
       else
         webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nJSON Config file parse failed"));
-
-      //Clean Dynamic JSON Doc
-      dynJsonDoc.clear();
     }
   }
 }
