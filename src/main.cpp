@@ -33,7 +33,7 @@
 char globalBuffer[GLOBAL_BUFFER_SIZE];
 
 //CONFIG variable
-StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> jsonDoc;
+StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> configJSON;
 
 EventManager eventManager;
 
@@ -84,7 +84,7 @@ void ConfigSaveJson(const char *json)
 
 bool ConfigParse(const char *jsonBuffer)
 {
-  DeserializationError jsonError = deserializeJson(jsonDoc, jsonBuffer);
+  DeserializationError jsonError = deserializeJson(configJSON, jsonBuffer);
   if (jsonError)
     Serial.println(F("JSON parsing failed"));
   return !jsonError;
@@ -93,10 +93,10 @@ bool ConfigParse(const char *jsonBuffer)
 void ConfigCreateHADevices()
 {
   //if HADevices is in JSON and not empty
-  if (!jsonDoc[F("HADevices")].isNull() && jsonDoc[F("HADevices")].size())
+  if (!configJSON[F("HADevices")].isNull() && configJSON[F("HADevices")].size())
   {
     //take number of HADevices to create
-    nbHADevices = jsonDoc[F("HADevices")].size();
+    nbHADevices = configJSON[F("HADevices")].size();
 
     //create array of pointer
     haDevices = new HADevice *[nbHADevices];
@@ -107,20 +107,20 @@ void ConfigCreateHADevices()
     for (uint8_t i = 0; i < nbHADevices; i++)
     {
       //if device type is Light
-      if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("Light")))
-        haDevices[i] = (HADevice *)new Light(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a Light
+      if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("Light")))
+        haDevices[i] = (HADevice *)new Light(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a Light
       //if device type is RollerShutter
-      else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("RollerShutter")))
-        haDevices[i] = (HADevice *)new RollerShutter(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a RollerShutter
+      else if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("RollerShutter")))
+        haDevices[i] = (HADevice *)new RollerShutter(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a RollerShutter
       //if device type is DS18B20Bus
-      else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DS18B20Bus")))
-        haDevices[i] = (HADevice *)new DS18B20Bus(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DS18B20Bus
+      else if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DS18B20Bus")))
+        haDevices[i] = (HADevice *)new DS18B20Bus(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DS18B20Bus
       //if device type is PilotWire
-      else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("PilotWire")))
-        haDevices[i] = (HADevice *)new PilotWire(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a PilotWire
+      else if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("PilotWire")))
+        haDevices[i] = (HADevice *)new PilotWire(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a PilotWire
       //if device type is DigitalOut
-      else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DigitalOut")))
-        haDevices[i] = (HADevice *)new DigitalOut(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DigitalOut
+      else if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DigitalOut")))
+        haDevices[i] = (HADevice *)new DigitalOut(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DigitalOut
     }
   }
 }
@@ -285,17 +285,17 @@ bool MqttConnect()
   sprintf_P(clientID, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
   //Connect
-  if (!jsonDoc[F("MQTT")][F("username")].as<const char *>()[0])
+  if (!configJSON[F("MQTT")][F("username")].as<const char *>()[0])
     mqttClient.connect(clientID);
   else
-    mqttClient.connect(clientID, jsonDoc[F("MQTT")][F("username")].as<const char *>(), jsonDoc[F("MQTT")][F("password")].as<const char *>());
+    mqttClient.connect(clientID, configJSON[F("MQTT")][F("username")].as<const char *>(), configJSON[F("MQTT")][F("password")].as<const char *>());
 
   //Subscribe to needed topic
   if (mqttClient.connected())
   {
     for (uint8_t i = 0; i < nbHADevices; i++)
       if (haDevices[i])
-        haDevices[i]->MqttSubscribe(mqttClient, jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>());
+        haDevices[i]->MqttSubscribe(mqttClient, configJSON[F("MQTT")][F("baseTopic")].as<const char *>());
   }
 
   return mqttClient.connected();
@@ -303,7 +303,7 @@ bool MqttConnect()
 
 void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
 {
-  const char *baseTopic = jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>();
+  const char *baseTopic = configJSON[F("MQTT")][F("baseTopic")].as<const char *>();
   char *relevantPartOfTopic = topic + strlen(baseTopic);
   if (baseTopic[strlen(baseTopic) - 1] != '/')
     relevantPartOfTopic++;
@@ -318,7 +318,7 @@ void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
 bool MqttStart()
 {
   //setup MQTT client (PubSubClient)
-  mqttClient.setClient(mqttEthClient).setServer(jsonDoc[F("MQTT")][F("hostname")].as<const char *>(), jsonDoc[F("MQTT")][F("port")]).setCallback(MqttCallback);
+  mqttClient.setClient(mqttEthClient).setServer(configJSON[F("MQTT")][F("hostname")].as<const char *>(), configJSON[F("MQTT")][F("port")]).setCallback(MqttCallback);
 
   //Then connect
   if (MqttConnect())
@@ -386,10 +386,10 @@ void setup()
   mac[5] = boot_signature_byte_get(0x17);
 
   //look for static ip in config JSON
-  if (!jsonDoc[F("System")][F("ip")].isNull())
+  if (!configJSON[F("System")][F("ip")].isNull())
   {
     IPAddress tmpIP;
-    if (tmpIP.fromString(jsonDoc[F("System")][F("ip")].as<const char *>()))
+    if (tmpIP.fromString(configJSON[F("System")][F("ip")].as<const char *>()))
       ip = tmpIP;
   }
 
@@ -439,7 +439,7 @@ void loop()
   while (mqttClient.connected() && publishSucceeded && (evtToSend = eventManager.Available()))
   {
     //build complete topic : baseTopic(with ending /) + topic in the event
-    completeTopic = jsonDoc[F("MQTT")][F("baseTopic")].as<const char *>();
+    completeTopic = configJSON[F("MQTT")][F("baseTopic")].as<const char *>();
     if (completeTopic[completeTopic.length() - 1] != '/')
       completeTopic += '/';
     completeTopic += evtToSend->topic;
