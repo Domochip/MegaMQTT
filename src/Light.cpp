@@ -89,12 +89,14 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
     //setup output
     pinMode(_pinLight, OUTPUT);
     digitalWrite(_pinLight, LOW);
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
 
     //save pushButtonMode
     _pushButtonMode = pushButtonMode;
 
     _initialized = true;
+
+    //Initialization publish
+    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
 }
 void Light::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
 {

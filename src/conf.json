@@ -8,26 +8,31 @@
     },
     "HADevices": [
         {
-            "type":"RollerShutter",
+            "type": "RollerShutter",
             "id": "VR0",
             "pins": "22,23,24,25",
-            "travelTime":30
+            "travelTime": 30
         },
         {
-            "type":"RollerShutter",
+            "type": "RollerShutter",
             "id": "VR1",
             "pins": "26,27,28,29",
-            "travelTime":35
+            "travelTime": 35
         },
         {
-            "type":"Light",
+            "type": "Light",
             "id": "L0",
-            "pins": "2,13"
+            "pins": "2,11"
         },
         {
-            "type":"DS18B20Bus",
-            "id":"DSB0",
-            "pin":3
+            "type": "DS18B20Bus",
+            "id": "DSB0",
+            "pin": 3
+        },
+        {
+            "type": "PilotWire",
+            "id": "PW0",
+            "pins": "12,13"
         }
     ]
 }

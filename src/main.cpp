@@ -15,6 +15,7 @@
 #include "Light.h"
 #include "RollerShutter.h"
 #include "DS18B20Bus.h"
+#include "PilotWire.h"
 
 //Web Resources
 #include "data\pure-min.css.gz.h"
@@ -114,6 +115,9 @@ void ConfigCreateHADevices()
       //if device type is DS18B20Bus
       else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DS18B20Bus")))
         haDevices[i] = (HADevice *)new DS18B20Bus(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DS18B20Bus
+      //if device type is PilotWire
+      else if (!strcmp_P(jsonDoc[F("HADevices")][i][F("type")].as<const char *>(), PSTR("PilotWire")))
+        haDevices[i] = (HADevice *)new PilotWire(jsonDoc[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a PilotWire
     }
   }
 }
