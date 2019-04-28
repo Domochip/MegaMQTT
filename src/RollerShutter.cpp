@@ -176,15 +176,15 @@ bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, un
         {
             //Check Payload
             if (length == 0)
-                return;
+                return true;
             if (length > 0 && (payload[0] < '0' || payload[0] > '9'))
-                return;
+                return true;
             if (length > 1 && (payload[1] < '0' || payload[1] > '9'))
-                return;
+                return true;
             if (length > 2 && (payload[2] < '0' || payload[2] > '9'))
-                return;
+                return true;
             if (length > 3)
-                return;
+                return true;
 
             //Convert requested position
             uint16_t requestedPosition = payload[0] - '0';

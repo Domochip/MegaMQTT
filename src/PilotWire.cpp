@@ -120,13 +120,13 @@ bool PilotWire::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsign
 
             //Check Payload
             if (length == 0)
-                return;
+                return true;
             if (length > 0 && (payload[0] < '0' || payload[0] > '9'))
-                return;
+                return true;
             if (length > 1 && (payload[1] < '0' || payload[1] > '9'))
-                return;
+                return true;
             if (length > 2)
-                return;
+                return true;
 
             //convert to number
             uint8_t newOrder = payload[0] - '0';
