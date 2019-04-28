@@ -50,10 +50,16 @@ void RollerShutter::Stop()
     if (_currentPosition > 100.0)
         _currentPosition = 100.0;
 
+    _isMoving = No;
+
+    Serial.print(F("[RollerShutter] "));
+    Serial.print(_id);
+    Serial.print(F(" is now at "));
+    Serial.print(round(_currentPosition));
+    Serial.println('%');
+
     //Send new position through MQTT
     _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), String(round(_currentPosition)).c_str());
-
-    _isMoving = No;
 };
 
 RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
@@ -217,6 +223,12 @@ bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, un
                 GoDown();
                 _outputTimer.SetTimeout(((uint16_t)_travelTime) * 10 * (_currentPosition - requestedPosition));
             }
+
+            Serial.print(F("[RollerShutter] "));
+            Serial.print(_id);
+            Serial.print(F(" going to "));
+            Serial.print(requestedPosition);
+            Serial.println('%');
         }
 
         return true;

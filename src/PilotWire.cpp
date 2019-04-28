@@ -28,6 +28,11 @@ void PilotWire::SetOrder(uint8_t order)
         digitalWrite(_pinNeg, LOW);
     }
 
+    Serial.print(F("[PilotWire] "));
+    Serial.print(_id);
+    Serial.print(F(" received new order : "));
+    Serial.println(_currentOrder);
+
     //Publish new Order back
     _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), String(_currentOrder).c_str());
 };
