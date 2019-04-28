@@ -28,14 +28,16 @@
 
 #define DEFAULT_IP "192.168.1.177"
 
-#define GLOBAL_BUFFER_SIZE 1025 //minimum size is 1024 (web)
-#define JSON_DOCUMENT_MAX_SIZE 1024
+//this size is used to dimension 2 static memory allocation : (so consumption is 2 * GLOBAL_BUFFER_AND_JSONDOC_SIZE)
+// - allocation of a globalBuffer for general purpose (including building HTTP answer packet to send)
+// - allocation of a StaticJsonDocument that contains configuration loaded during setup()
+#define GLOBAL_BUFFER_AND_JSONDOC_SIZE 1024 //minimum size is 1024 (web answer)
 
-//GLOABAL USAGE
-char globalBuffer[GLOBAL_BUFFER_SIZE];
+//GLOBAL USAGE
+char globalBuffer[GLOBAL_BUFFER_AND_JSONDOC_SIZE];
 
 //CONFIG variable
-StaticJsonDocument<JSON_DOCUMENT_MAX_SIZE> configJSON;
+StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> configJSON;
 
 EventManager eventManager;
 
@@ -66,10 +68,10 @@ void SoftwareReset()
 }
 
 //---------CONFIG---------
-bool ConfigReadAndParseFromEEPROM(char *jsonBuffer)
+bool ConfigReadAndParseFromEEPROM(char *jsonBuffer, uint16_t jsonBufferSize)
 {
   uint16_t i = 0;
-  while (EEPROM[i])
+  while (EEPROM[i] && i < jsonBufferSize)
   {
     jsonBuffer[i] = EEPROM[i];
     i++;
@@ -261,8 +263,24 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
     //if JSON Config file POSTed
     if (!strcmp_P(requestURI, PSTR("/conf")))
     {
+      struct GlobalBufferAllocator
+      {
+        void *allocate(size_t n)
+        {
+          if (n > GLOBAL_BUFFER_AND_JSONDOC_SIZE)
+          {
+            Serial.println(F("GlobalBufferAllocator can't go over globalBuffer size"));
+            SoftwareReset();
+          }
+          else
+            return (void *)globalBuffer;
+        }
+        void deallocate(void *p) {}
+      };
+      typedef BasicJsonDocument<GlobalBufferAllocator> DynamicJsonDocumentInGlobalBuffer;
+
       //Try to deserialize it
-      DynamicJsonDocument dynJsonDoc(JSON_DOCUMENT_MAX_SIZE); //Warning : Heap already has fileContent and will get this JSON too...
+      DynamicJsonDocumentInGlobalBuffer dynJsonDoc(GLOBAL_BUFFER_AND_JSONDOC_SIZE); //Warning : Heap already has fileContent and will get this JSON too...
       DeserializationError jsonError = deserializeJson(dynJsonDoc, fileContent);
       //if deserialization succeed
       if (!jsonError)
@@ -380,7 +398,7 @@ void setup()
 
   //Load JSON from EEPROM
   Serial.println(F("[setup]Config JSON"));
-  if (ConfigReadAndParseFromEEPROM(globalBuffer))
+  if (ConfigReadAndParseFromEEPROM(globalBuffer, sizeof(globalBuffer)))
     Serial.println(F("[setup]Config JSON : OK\n"));
   else
     Serial.println(F("[setup]Config JSON : FAILED\n"));
