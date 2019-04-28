@@ -174,8 +174,28 @@ bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, un
         //if topic finishes by '/command'
         if (!strcmp_P(relevantPartOfTopic + strlen(relevantPartOfTopic) - 8, PSTR("/command")))
         {
+            //Check Payload
+            if (length == 0)
+                return;
+            if (length > 0 && (payload[0] < '0' || payload[0] > '9'))
+                return;
+            if (length > 1 && (payload[1] < '0' || payload[1] > '9'))
+                return;
+            if (length > 2 && (payload[2] < '0' || payload[2] > '9'))
+                return;
+            if (length > 3)
+                return;
+
             //Convert requested position
-            uint8_t requestedPosition = atoi((const char *)payload);
+            uint16_t requestedPosition = payload[0] - '0';
+            if (length > 1)
+                requestedPosition = requestedPosition * 10 + (payload[1] - '0');
+            if (length > 2)
+                requestedPosition = requestedPosition * 10 + (payload[2] - '0');
+
+            //fix too wide value
+            if (requestedPosition > 100)
+                requestedPosition = 100;
 
             //if roller is moving, then stop it (and then current Position will be refreshed)
             if (_isMoving != No)

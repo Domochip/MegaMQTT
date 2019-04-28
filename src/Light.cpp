@@ -118,21 +118,24 @@ bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned i
         //if topic finishes by '/command'
         if (!strcmp_P(relevantPartOfTopic + strlen(relevantPartOfTopic) - 8, PSTR("/command")))
         {
-            switch (payload[0])
+            if (length == 1)
             {
-            //OFF requested
-            case '0':
-                Off();
-                break;
-            //ON requested
-            case '1':
-                On();
-                break;
-            //Toggle requested
-            case 't':
-            case 'T':
-                Toggle();
-                break;
+                switch (payload[0])
+                {
+                //OFF requested
+                case '0':
+                    Off();
+                    break;
+                //ON requested
+                case '1':
+                    On();
+                    break;
+                //Toggle requested
+                case 't':
+                case 'T':
+                    Toggle();
+                    break;
+                }
             }
         }
 

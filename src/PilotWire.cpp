@@ -117,11 +117,22 @@ bool PilotWire::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsign
         //if topic finishes by '/command'
         if (!strcmp_P(relevantPartOfTopic + strlen(relevantPartOfTopic) - 8, PSTR("/command")))
         {
-            uint8_t newOrder = 51; //default is Confort
-            if (length > 0 && payload[0] >= '0' && payload[0] <= '9')
-                newOrder = payload[0] - '0';
-            if (length > 1 && payload[1] >= '0' && payload[1] <= '9')
+
+            //Check Payload
+            if (length == 0)
+                return;
+            if (length > 0 && (payload[0] < '0' || payload[0] > '9'))
+                return;
+            if (length > 1 && (payload[1] < '0' || payload[1] > '9'))
+                return;
+            if (length > 2)
+                return;
+
+            //convert to number
+            uint8_t newOrder = payload[0] - '0';
+            if (length > 1)
                 newOrder = newOrder * 10 + (payload[1] - '0');
+
             SetOrder(newOrder);
         }
 
