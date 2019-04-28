@@ -226,7 +226,7 @@ bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, un
 
             Serial.print(F("[RollerShutter] "));
             Serial.print(_id);
-            Serial.print(F(" going to "));
+            Serial.print(F(" is going to "));
             Serial.print(requestedPosition);
             Serial.println('%');
         }

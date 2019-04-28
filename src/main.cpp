@@ -255,7 +255,7 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
     if (!strcmp_P(requestURI, PSTR("/conf")))
     {
       //Try to deserialize it
-      DynamicJsonDocument dynJsonDoc(JSON_DOCUMENT_MAX_SIZE); //Caution : Heap already has fileContent and will get this JSON too...
+      DynamicJsonDocument dynJsonDoc(JSON_DOCUMENT_MAX_SIZE); //Warning : Heap already has fileContent and will get this JSON too...
       DeserializationError jsonError = deserializeJson(dynJsonDoc, fileContent);
       //if deserialization succeed
       if (!jsonError)
@@ -275,7 +275,7 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
         SoftwareReset();
       }
       else
-        webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nIncorrect JSON Config file"));
+        webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nJSON Config file parse failed"));
 
       //Clean Dynamic JSON Doc
       dynJsonDoc.clear();
