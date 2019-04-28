@@ -24,7 +24,6 @@
 #include "data\side-menu.js.gz.h"
 #include "data\index.html.gz.h"
 #include "data\status0.html.gz.h"
-#include "data\status1.html.gz.h"
 #include "data\config0.html.gz.h"
 
 #define GLOBAL_BUFFER_SIZE 1025 //minimum size is 1024 (web)
@@ -206,14 +205,6 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
       sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(status0htmlgz));
       contentPtr = status0htmlgz;
       contentSize = sizeof(status0htmlgz);
-      return404 = false;
-    }
-    else if (!strcmp_P(requestURI, PSTR("/status1.html")))
-    {
-      //build Header
-      sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n"), (uint16_t)sizeof(status1htmlgz));
-      contentPtr = status1htmlgz;
-      contentSize = sizeof(status1htmlgz);
       return404 = false;
     }
     else if (!strcmp_P(requestURI, PSTR("/config0.html")))

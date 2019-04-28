@@ -42,11 +42,6 @@
 
                 <div class="content" id="mainContent">
                     <div id="content0"></div>
-                    <div id="contente"></div>
-
-                    <div id="content1"></div>
-                    <div id="content2"></div>
-                    <div id="content3"></div>
                 </div>
             </div>
         </div>
@@ -144,10 +139,6 @@
                 $("#menuDiscover").classList.remove("pure-menu-selected");
 
                 $("#content0").innerHTML = '';
-                $("#contente").innerHTML = '';
-                $("#content1").innerHTML = '';
-                $("#content2").innerHTML = '';
-                $("#content3").innerHTML = '';
             };
 
             $("#menuStatus").addEventListener("click",function(evt){
@@ -156,10 +147,7 @@
                 $("#menuStatus").classList.add("pure-menu-selected");
                 $("#mainHeader").textContent="Status";
 
-                load($("#content0"),"/status0.html");
-                load($("#contente"),"/statuse.html");
-
-                load($("#content1"),"/status1.html",function(){
+                load($("#content0"),"/status0.html",function(){
                     if($("#applicationName")!=null && $("#applicationName").innerText.length !=0){
                         document.title = "Domochip "+$("#applicationName").innerText;
                         sessionStorage.setItem("ProductName",$("#applicationName").innerText);
@@ -169,8 +157,6 @@
                         $("#menuAppName").innerText = $("#shortApplicationName").innerText;
                     }
                 });
-                load($("#content2"),"/status2.html");
-                load($("#content3"),"/status3.html");
             });
             triggerEvent($("#menuStatus"),'click');
 
@@ -180,10 +166,6 @@
                 $("#menuConfig").classList.add("pure-menu-selected");
                 $("#mainHeader").textContent="Config";
                 load($("#content0"),"/config0.html");
-                load($("#contente"),"/confige.html");
-                load($("#content1"),"/config1.html");
-                load($("#content2"),"/config2.html");
-                load($("#content3"),"/config3.html");
             });
 
             $("#menuDiscover").addEventListener("click",function(evt){
