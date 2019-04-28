@@ -21,7 +21,8 @@
             "type": "RollerShutter",
             "id": "VR1",
             "pins": "26,27,28,29",
-            "travelTime": 35
+            "travelTime": 35,
+            "velux": true
         },
         {
             "type": "Light",
