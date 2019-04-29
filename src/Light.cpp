@@ -30,26 +30,15 @@ Light::Light(JsonVariant config, EventManager *evtMgr)
     if (config["pins"].isNull())
         return;
 
-    char workingPinsList[6];
-    uint8_t pinBtn, pinLight;
-
-    //Copy pins list
-    strncpy(workingPinsList, config["pins"].as<const char *>(), sizeof(workingPinsList));
-
-    //Parse it
-    char *pinStr;
-    pinStr = strtok(workingPinsList, ",");
-    if (!pinStr)
+    if (config["pins"][0].isNull() || config["pins"][1].isNull())
         return;
-    pinBtn = atoi(pinStr);
 
-    pinStr = strtok(0, ",");
-    if (!pinStr)
+    if (!config["pins"][0].as<uint8_t>() || !config["pins"][1].as<uint8_t>())
         return;
-    pinLight = atoi(pinStr);
+
 
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), pinBtn, pinLight, config["pushbutton"] | false, evtMgr);
+    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pushbutton"] | false, evtMgr);
 }
 
 void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr)

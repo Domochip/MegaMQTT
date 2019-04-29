@@ -45,26 +45,14 @@ PilotWire::PilotWire(JsonVariant config, EventManager *evtMgr)
     if (config["pins"].isNull())
         return;
 
-    char workingPinsList[6];
-    uint8_t pinPos, pinNeg;
-
-    //Copy pins list
-    strncpy(workingPinsList, config["pins"].as<const char *>(), sizeof(workingPinsList));
-
-    //Parse it
-    char *pinStr;
-    pinStr = strtok(workingPinsList, ",");
-    if (!pinStr)
+    if (config["pins"][0].isNull() || config["pins"][1].isNull())
         return;
-    pinPos = atoi(pinStr);
 
-    pinStr = strtok(0, ",");
-    if (!pinStr)
+    if (!config["pins"][0].as<uint8_t>() || !config["pins"][1].as<uint8_t>())
         return;
-    pinNeg = atoi(pinStr);
 
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), pinPos, pinNeg, evtMgr);
+    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), evtMgr);
 };
 void PilotWire::Init(const char *id, uint8_t pinPos, uint8_t pinNeg, EventManager *evtMgr)
 {

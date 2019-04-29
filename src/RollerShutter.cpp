@@ -99,34 +99,14 @@ RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
     if (config["travelTime"].isNull() || config["travelTime"].as<uint8_t>() == 0)
         return;
 
-    char workingPinsList[12];
-    uint8_t pinBtnUp, pinBtnDown, pinRollerDir, pinRollerPower;
+    if (config["pins"][0].isNull() || config["pins"][1].isNull() || config["pins"][2].isNull() || config["pins"][3].isNull())
+        return;
 
-    //Copy pins list
-    strncpy(workingPinsList, config["pins"].as<const char *>(), sizeof(workingPinsList));
-
-    //Parse it
-    char *pinStr;
-    pinStr = strtok(workingPinsList, ",");
-    if (!pinStr)
+    if (!config["pins"][0].as<uint8_t>() || !config["pins"][1].as<uint8_t>() || !config["pins"][2].as<uint8_t>() || !config["pins"][3].as<uint8_t>())
         return;
-    pinBtnUp = atoi(pinStr);
-
-    pinStr = strtok(0, ",");
-    if (!pinStr)
-        return;
-    pinBtnDown = atoi(pinStr);
-    pinStr = strtok(0, ",");
-    if (!pinStr)
-        return;
-    pinRollerDir = atoi(pinStr);
-    pinStr = strtok(0, ",");
-    if (!pinStr)
-        return;
-    pinRollerPower = atoi(pinStr);
 
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), pinBtnUp, pinBtnDown, pinRollerDir, pinRollerPower, config["travelTime"].as<uint8_t>(), config["velux"].as<bool>(), evtMgr);
+    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pins"][2].as<uint8_t>(), config["pins"][3].as<uint8_t>(), config["travelTime"].as<uint8_t>(), config["velux"].as<bool>(), evtMgr);
 }
 
 void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool veluxType, EventManager *evtMgr)
