@@ -123,6 +123,8 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     Serial.print(',');
     Serial.print(pinRollerPower);
     Serial.print(',');
+    Serial.print(travelTime);
+    Serial.print(',');
     if (!veluxType)
         Serial.print(F("normal"));
     else
