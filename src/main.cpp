@@ -57,8 +57,6 @@ struct
   } mqtt;
 } config;
 
-StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> configJSON;
-
 //eventManager store events to send to MQTT
 EventManager eventManager;
 
@@ -89,7 +87,7 @@ void SoftwareReset()
 }
 
 //---------CONFIG---------
-bool ConfigReadAndParseFromEEPROM(StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> &configJSON, char *jsonBuffer, uint16_t jsonBufferSize)
+bool ConfigReadAndParseFromEEPROM(DynamicJsonDocument &configJSON, char *jsonBuffer, uint16_t jsonBufferSize)
 {
   uint16_t i = 0;
   while (EEPROM[i] && i < jsonBufferSize)
@@ -99,13 +97,13 @@ bool ConfigReadAndParseFromEEPROM(StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_S
   }
   EEPROM[i] = 0;
 
-  DeserializationError jsonError = deserializeJson(configJSON, (const char*)jsonBuffer);
+  DeserializationError jsonError = deserializeJson(configJSON, jsonBuffer);
   if (jsonError)
     Serial.println(F("JSON parsing failed"));
   return !jsonError;
 }
 
-void ConfigReadSystemAndMQTT(StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> &configJSON)
+void ConfigReadSystemAndMQTT(DynamicJsonDocument &configJSON)
 {
   //read System/name
   if (!configJSON[F("System")][F("name")].isNull() && strlen(configJSON[F("System")][F("name")].as<const char *>()) < sizeof(config.system.name))
@@ -172,7 +170,7 @@ void ConfigSaveJsonToEEPROM(const char *json)
   EEPROM[strlen(json)] = 0;
 }
 
-void ConfigCreateHADevices(StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> &configJSON)
+void ConfigCreateHADevices(DynamicJsonDocument &configJSON)
 {
   //if HADevices is in JSON and not empty
   if (!configJSON[F("HADevices")].isNull() && configJSON[F("HADevices")].size())
@@ -491,6 +489,9 @@ void setup()
 {
   //Start serial
   Serial.begin(115200);
+
+  //Create JsonDocument
+  DynamicJsonDocument configJSON(GLOBAL_BUFFER_AND_JSONDOC_SIZE);
 
   //Load JSON from EEPROM
   Serial.println(F("[setup]Config JSON"));
