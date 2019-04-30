@@ -30,10 +30,13 @@
 
 #define DEFAULT_IP "192.168.1.177"
 
-//this size is used to dimension 2 static memory allocation : (so consumption is 2 * GLOBAL_BUFFER_AND_JSONDOC_SIZE)
-// - allocation of a globalBuffer for general purpose (including building HTTP answer packet to send)
-// - allocation of a StaticJsonDocument that contains configuration loaded during setup()
-#define GLOBAL_BUFFER_AND_JSONDOC_SIZE 1024 //minimum size is 1024 (web answer)
+//this size is used to dimension 2 memory allocation :
+// - allocation of a globalBuffer for general purpose (including copy of JSON from EEPROM and building HTTP answer packet to send)
+//
+//During setup(), JSON stored in EEPROM is readed into globalbuffer, then a DynamicJSON is created to parse it
+//During WebServerCallback() (a new JSON file is POSTed), the new JSON file is in heap (String) and a DynamicJSON using globalbuffer as storage is used to parse the new JSON
+
+#define GLOBAL_BUFFER_AND_JSONDOC_SIZE 1536 //minimum size is 1024 (web answer)
 
 //GLOBAL USAGE
 char globalBuffer[GLOBAL_BUFFER_AND_JSONDOC_SIZE];
@@ -97,7 +100,7 @@ bool ConfigReadAndParseFromEEPROM(DynamicJsonDocument &configJSON, char *jsonBuf
   }
   EEPROM[i] = 0;
 
-  DeserializationError jsonError = deserializeJson(configJSON, jsonBuffer);
+  DeserializationError jsonError = deserializeJson(configJSON, (const char *)jsonBuffer);
   if (jsonError)
     Serial.println(F("JSON parsing failed"));
   return !jsonError;
@@ -214,26 +217,32 @@ bool EthernetConnect(uint8_t *mac, IPAddress &requestedIP)
 
   //if no requestedIP configured
   if (!requestedIP[0] && !requestedIP[1] && !requestedIP[2] && !requestedIP[3])
-    // {
-    //   Serial.println(F(" and DHCP"));
-    //   //try DHCP
-    //   if (Ethernet.begin(mac) == 0)
-    //   {
-    //     //if DHCP failed, use default IP
-    requestedIP.fromString(DEFAULT_IP);
-  //     Serial.print(F("[EthernetConnect] DHCP failed, switch to default IP ("));
-  //     requestedIP.printTo(Serial);
-  //     Serial.println(')');
-  //     Ethernet.begin(mac, requestedIP);
-  //   }
-  // }
-  // else
-  // {
-  Serial.print(F(" and ip="));
-  requestedIP.printTo(Serial);
-  Serial.println();
-  Ethernet.begin(mac, requestedIP);
-  //}
+  {
+    Serial.println(F(" and DHCP"));
+    //try DHCP
+    if (Ethernet.begin(mac) == 0)
+    {
+      //if DHCP failed, use default IP
+      requestedIP.fromString(DEFAULT_IP);
+      Serial.print(F("[EthernetConnect] DHCP failed, switch to default IP ("));
+      requestedIP.printTo(Serial);
+      Serial.println(')');
+      Ethernet.begin(mac, requestedIP);
+    }
+    else
+    {
+      Serial.print(F("[EthernetConnect] Got IP : "));
+      Ethernet.localIP().printTo(Serial);
+      Serial.println();
+    }
+  }
+  else
+  {
+    Serial.print(F(" and ip="));
+    requestedIP.printTo(Serial);
+    Serial.println();
+    Ethernet.begin(mac, requestedIP);
+  }
 
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
@@ -398,7 +407,33 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
         SoftwareReset();
       }
       else
-        webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nJSON Config file parse failed"));
+      {
+        switch (jsonError.code())
+        {
+        case DeserializationError::Code::IncompleteInput:
+          Serial.println(F("[WebServerCallback] Received JSON Config file parse failed : IncompleteInput"));
+          webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nJSON Config file parse failed : IncompleteInput"));
+          break;
+        case DeserializationError::Code::InvalidInput:
+          Serial.println(F("[WebServerCallback] Received JSON Config file parse failed : InvalidInput"));
+          webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nJSON Config file parse failed : InvalidInput"));
+          break;
+        case DeserializationError::Code::NoMemory:
+          Serial.println(F("[WebServerCallback] Received JSON Config file parse failed : NoMemory"));
+          webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nJSON Config file parse failed : NoMemory"));
+          break;
+        case DeserializationError::Code::NotSupported:
+          Serial.println(F("[WebServerCallback] Received JSON Config file parse failed : NotSupported"));
+          webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nJSON Config file parse failed : NotSupported"));
+          break;
+        case DeserializationError::Code::TooDeep:
+          Serial.println(F("[WebServerCallback] Received JSON Config file parse failed : TooDeep"));
+          webClient.println(F("HTTP/1.1 400 Bad Request\r\n\r\nJSON Config file parse failed : TooDeep"));
+          break;
+        default:
+          break;
+        }
+      }
     }
   }
 }
