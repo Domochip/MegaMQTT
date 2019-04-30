@@ -26,7 +26,7 @@
 #include "data\status0.html.gz.h"
 #include "data\config0.html.gz.h"
 
-#define VERSION "1.0"
+#define VERSION "1.1"
 
 #define DEFAULT_IP "192.168.1.177"
 
