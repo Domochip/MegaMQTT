@@ -200,8 +200,8 @@ void DS18B20Bus::Init(const char *id, uint8_t pinOneWire, EventManager *evtMgr)
     //save EventManager
     _evtMgr = evtMgr;
 
-    //copy id pointer
-    _id = id;
+    //copy id
+    strcpy(_id, id);
 
     //Configure OneWire
     _oneWire.begin(pinOneWire);

@@ -65,8 +65,8 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
     //save pointer to Eventmanager
     _evtMgr = evtMgr;
 
-    //copy id pointer
-    _id = id;
+    //copy id
+    strcpy(_id, id);
 
     //start button
     _btn.attach(pinBtn, INPUT_PULLUP);

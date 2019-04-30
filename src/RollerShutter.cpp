@@ -142,8 +142,8 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     //save EventManager
     _evtMgr = evtMgr;
 
-    //copy id pointer
-    _id = id;
+    //copy id
+    strcpy(_id, id);
 
     //start buttons
     _btnUp.attach(pinBtnUp, INPUT_PULLUP);

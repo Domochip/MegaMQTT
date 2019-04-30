@@ -46,8 +46,8 @@ void DigitalOut::Init(const char *id, uint8_t pinOut, EventManager *evtMgr)
     //save EventManager
     _evtMgr = evtMgr;
 
-    //copy id pointer
-    _id = id;
+    //copy id
+    strcpy(_id, id);
 
     //save pin numbers
     _pinOut = pinOut;

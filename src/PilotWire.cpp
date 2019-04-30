@@ -73,8 +73,8 @@ void PilotWire::Init(const char *id, uint8_t pinPos, uint8_t pinNeg, EventManage
     //save pointer to Eventmanager
     _evtMgr = evtMgr;
 
-    //copy id pointer
-    _id = id;
+    //copy id
+    strcpy(_id, id);
 
     //save pin numbers
     _pinPos = pinPos;

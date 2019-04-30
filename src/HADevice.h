@@ -8,20 +8,20 @@
 
 class HADevice
 {
-  private:
-    static bool _usedPins[54];
+private:
+  static bool _usedPins[54];
 
-  protected:
-    bool _initialized = false;
-    const char *_id = NULL;
-    EventManager *_evtMgr = NULL;
+protected:
+  bool _initialized = false;
+  char _id[17] = {0};
+  EventManager *_evtMgr = NULL;
 
-    bool IsPinAvailable(uint8_t pinNumber);
+  bool IsPinAvailable(uint8_t pinNumber);
 
-  public:
-    virtual void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic) = 0;
-    virtual bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length) = 0;
-    virtual bool Run() = 0;
+public:
+  virtual void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic) = 0;
+  virtual bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length) = 0;
+  virtual bool Run() = 0;
 };
 
 #endif
