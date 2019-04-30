@@ -126,13 +126,13 @@ MQTT publication :
 
 |topic|data|Description|
 |--|--|--|
-|{MQTT BaseTopic}/{ID HADevice}/state|0 \| 1|0 : light is off ; 1 : light is on|
+|{MQTT BaseTopic}/{HADevice ID}/state|0 \| 1|0 : light is off ; 1 : light is on|
 
 MQTT subscribtion :  
 
 |topic|data|Description|
 |--|--|--|
-|{MQTT BaseTopic}/{ID HADevice}/command|0 \| 1 \| t|0 : power off light ; 1 : power on light ; toggle light|
+|{MQTT BaseTopic}/{HADevice ID}/command|0 \| 1 \| t|0 : power off light ; 1 : power on light ; toggle light|
 
 ### RollerShutter
 
@@ -150,13 +150,13 @@ MQTT publication :
 
 |topic|data|Description|
 |--|--|--|
-|{MQTT BaseTopic}/{ID HADevice}/state|0->100| position of the roller shutter (%)|
+|{MQTT BaseTopic}/{HADevice ID}/state|0->100| position of the roller shutter (%)|
 
 MQTT subscribtion :  
 
 |topic|data|Description|
 |--|--|--|
-|{MQTT BaseTopic}/{ID HADevice}/command|0->100|Move the Roller Shutter to the desired position (%)|
+|{MQTT BaseTopic}/{HADevice ID}/command|0->100|Move the Roller Shutter to the desired position (%)|
 
 TODO : electric diagrams for normal and velux Roller Shutter
 
@@ -192,13 +192,13 @@ MQTT publication :
 
 |topic|data|Description|
 |--|--|--|
-|{MQTT BaseTopic}/{ID HADevice}/state|0->99|current Order value (0-10 : Arrêt ; 11-20 : Hors Gel ; 21-50 : Eco ; 51-99 : Confor)|
+|{MQTT BaseTopic}/{HADevice ID}/state|0->99|current Order value (0-10 : Arrêt ; 11-20 : Hors Gel ; 21-50 : Eco ; 51-99 : Confor)|
 
 MQTT subscribtion :  
 
 |topic|data|Description|
 |--|--|--|
-|{MQTT BaseTopic}/{ID HADevice}/command|0->99|requested PiloteWire Order (0-10 : Arrêt ; 11-20 : Hors Gel ; 21-50 : Eco ; 51-99 : Confor)|
+|{MQTT BaseTopic}/{HADevice ID}/command|0->99|requested PiloteWire Order (0-10 : Arrêt ; 11-20 : Hors Gel ; 21-50 : Eco ; 51-99 : Confor)|
 
 ### DigitalOut
 
@@ -214,10 +214,10 @@ MQTT publication :
 
 |topic|data|Description|
 |--|--|--|
-|{MQTT BaseTopic}/{ID HADevice}/state|0 \| 1|0 : output is off ; 1 : output is on|
+|{MQTT BaseTopic}/{HADevice ID}/state|0 \| 1|0 : output is off ; 1 : output is on|
 
 MQTT subscribtion :  
 
 |topic|data|Description|
 |--|--|--|
-|{MQTT BaseTopic}/{ID HADevice}/command|0 \| 1|0 : power off output ; 1 : power on output|
+|{MQTT BaseTopic}/{HADevice ID}/command|0 \| 1|0 : power off output ; 1 : power on output|
