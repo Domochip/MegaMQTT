@@ -583,12 +583,10 @@ void loop()
     if (haDevices[i])
       timeCriticalOperationInProgress |= haDevices[i]->Run();
 
-  //if time critical operation is in progress, then skip rest of code
-  if (timeCriticalOperationInProgress)
-    return;
-
   //------------------------WEBSERVER------------------------
-  webServer.Run();
+  //if time critical operation is in progress, then skip WebServer operation (which can be very long)
+  if (timeCriticalOperationInProgress)
+    webServer.Run();
 
   //------------------------MQTT------------------------
   MqttRun();
