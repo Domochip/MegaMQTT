@@ -38,9 +38,28 @@
 //GLOBAL USAGE
 char globalBuffer[GLOBAL_BUFFER_AND_JSONDOC_SIZE];
 
-//CONFIG variable
+//CONFIG variables
+//config contains infos that need to be retained for Run
+struct
+{
+  struct
+  {
+    char name[16 + 1] = {0}; //system name (max 16 char)
+    IPAddress ip = (uint32_t)0;
+  } system;
+  struct
+  {
+    char hostname[32 + 1] = {0};
+    uint32_t port = 1883;
+    char username[16 + 1] = {0};
+    char password[16 + 1] = {0};
+    char baseTopic[16 + 1] = {0};
+  } mqtt;
+} config;
+
 StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> configJSON;
 
+//eventManager store events to send to MQTT
 EventManager eventManager;
 
 //HADevice variables
@@ -70,7 +89,7 @@ void SoftwareReset()
 }
 
 //---------CONFIG---------
-bool ConfigReadAndParseFromEEPROM(char *jsonBuffer, uint16_t jsonBufferSize)
+bool ConfigReadAndParseFromEEPROM(StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> &configJSON, char *jsonBuffer, uint16_t jsonBufferSize)
 {
   uint16_t i = 0;
   while (EEPROM[i] && i < jsonBufferSize)
@@ -80,20 +99,80 @@ bool ConfigReadAndParseFromEEPROM(char *jsonBuffer, uint16_t jsonBufferSize)
   }
   EEPROM[i] = 0;
 
-  DeserializationError jsonError = deserializeJson(configJSON, (const char *)jsonBuffer);
+  DeserializationError jsonError = deserializeJson(configJSON, jsonBuffer);
   if (jsonError)
     Serial.println(F("JSON parsing failed"));
   return !jsonError;
 }
 
-void ConfigSaveJson(const char *json)
+void ConfigReadSystemAndMQTT(StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> &configJSON)
+{
+  //read System/name
+  if (!configJSON[F("System")][F("name")].isNull() && strlen(configJSON[F("System")][F("name")].as<const char *>()) < sizeof(config.system.name))
+    strcpy(config.system.name, configJSON[F("System")][F("name")].as<const char *>());
+  else
+    strcpy_P(config.system.name, PSTR("MegaMQTT"));
+
+  Serial.print(F("[setup][Config] System/name="));
+  Serial.println(config.system.name);
+
+  //read System/ip
+  if (!configJSON[F("System")][F("ip")].isNull())
+  {
+    IPAddress tmpIP;
+    if (tmpIP.fromString(configJSON[F("System")][F("ip")].as<const char *>()))
+      config.system.ip = tmpIP;
+  }
+
+  Serial.print(F("[setup][Config] System/ip="));
+  config.system.ip.printTo(Serial);
+  Serial.println();
+
+  //read MQTT/hostname
+  if (!configJSON[F("MQTT")][F("hostname")].isNull() && strlen(configJSON[F("MQTT")][F("hostname")].as<const char *>()) < sizeof(config.mqtt.hostname))
+    strcpy(config.mqtt.hostname, configJSON[F("MQTT")][F("hostname")].as<const char *>());
+
+  Serial.print(F("[setup][Config] MQTT/hostname="));
+  Serial.println(config.mqtt.hostname);
+
+  //read MQTT/port
+  config.mqtt.port = configJSON[F("MQTT")][F("port")] | config.mqtt.port;
+
+  Serial.print(F("[setup][Config] MQTT/port="));
+  Serial.println(config.mqtt.port);
+
+  //read MQTT/username
+  if (!configJSON[F("MQTT")][F("username")].isNull() && strlen(configJSON[F("MQTT")][F("username")].as<const char *>()) < sizeof(config.mqtt.username))
+    strcpy(config.mqtt.username, configJSON[F("MQTT")][F("username")].as<const char *>());
+
+  Serial.print(F("[setup][Config] MQTT/username="));
+  Serial.println(config.mqtt.username);
+
+  //read MQTT/password
+  if (!configJSON[F("MQTT")][F("password")].isNull() && strlen(configJSON[F("MQTT")][F("password")].as<const char *>()) < sizeof(config.mqtt.password))
+    strcpy(config.mqtt.password, configJSON[F("MQTT")][F("password")].as<const char *>());
+
+  Serial.print(F("[setup][Config] MQTT/password="));
+  if (strlen(config.mqtt.password))
+    Serial.println(F("***"));
+  else
+    Serial.println();
+
+  //read MQTT/baseTopic
+  if (!configJSON[F("MQTT")][F("baseTopic")].isNull() && strlen(configJSON[F("MQTT")][F("baseTopic")].as<const char *>()) < sizeof(config.mqtt.baseTopic))
+    strcpy(config.mqtt.baseTopic, configJSON[F("MQTT")][F("baseTopic")].as<const char *>());
+  Serial.print(F("[setup][Config] MQTT/baseTopic="));
+  Serial.println(config.mqtt.baseTopic);
+}
+
+void ConfigSaveJsonToEEPROM(const char *json)
 {
   for (uint16_t i = 0; i < strlen(json); i++)
     EEPROM[i] = json[i];
   EEPROM[strlen(json)] = 0;
 }
 
-void ConfigCreateHADevices()
+void ConfigCreateHADevices(StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_SIZE> &configJSON)
 {
   //if HADevices is in JSON and not empty
   if (!configJSON[F("HADevices")].isNull() && configJSON[F("HADevices")].size())
@@ -241,11 +320,11 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
       uint16_t jsonSize;
 
       //define size of resultantJSON
-      sprintf_P(globalBuffer, PSTR("{\"n\":\"%s\",\"b\":\"%s\",\"u\":\"%dd%02dh%02dm\"}"), configJSON[F("System")][F("name")].as<const char *>(), VERSION, (minutes / 1440), (minutes / 60 % 24), (minutes % 60));
+      sprintf_P(globalBuffer, PSTR("{\"n\":\"%s\",\"b\":\"%s\",\"u\":\"%dd%02dh%02dm\"}"), config.system.name, VERSION, (minutes / 1440), (minutes / 60 % 24), (minutes % 60));
       jsonSize = strlen(globalBuffer);
       //build Header+Content
       sprintf_P(globalBuffer, PSTR("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: none\r\nCache-Control: no-cache\r\nContent-Type: text/json\r\nContent-Length: %d\r\n\r\n"), jsonSize);
-      sprintf_P(globalBuffer + strlen(globalBuffer), PSTR("{\"n\":\"%s\",\"b\":\"%s\",\"u\":\"%dd%02dh%02dm\"}"), configJSON[F("System")][F("name")].as<const char *>(), VERSION, (minutes / 1440), (minutes / 60 % 24), (minutes % 60));
+      sprintf_P(globalBuffer + strlen(globalBuffer), PSTR("{\"n\":\"%s\",\"b\":\"%s\",\"u\":\"%dd%02dh%02dm\"}"), config.system.name, VERSION, (minutes / 1440), (minutes / 60 % 24), (minutes % 60));
       return404 = false;
     }
 
@@ -309,7 +388,7 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
         Serial.println(F("[WebServerCallback] Save JSON to EEPROM"));
 
         //Save JSON to EEPROM
-        ConfigSaveJson(fileContent);
+        ConfigSaveJsonToEEPROM(fileContent);
 
         //Answer to the webClient
         webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nJSON Config file saved"));
@@ -338,17 +417,17 @@ bool MqttConnect()
   sprintf_P(clientID, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
   //Connect
-  if (!configJSON[F("MQTT")][F("username")].as<const char *>()[0])
+  if (!config.mqtt.username[0])
     mqttClient.connect(clientID);
   else
-    mqttClient.connect(clientID, configJSON[F("MQTT")][F("username")].as<const char *>(), configJSON[F("MQTT")][F("password")].as<const char *>());
+    mqttClient.connect(clientID, config.mqtt.username, config.mqtt.password);
 
   //Subscribe to needed topic
   if (mqttClient.connected())
   {
     for (uint8_t i = 0; i < nbHADevices; i++)
       if (haDevices[i])
-        haDevices[i]->MqttSubscribe(mqttClient, configJSON[F("MQTT")][F("baseTopic")].as<const char *>());
+        haDevices[i]->MqttSubscribe(mqttClient, config.mqtt.baseTopic);
   }
 
   return mqttClient.connected();
@@ -356,9 +435,8 @@ bool MqttConnect()
 
 void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
 {
-  const char *baseTopic = configJSON[F("MQTT")][F("baseTopic")].as<const char *>();
-  char *relevantPartOfTopic = topic + strlen(baseTopic);
-  if (baseTopic[strlen(baseTopic) - 1] != '/')
+  char *relevantPartOfTopic = topic + strlen(config.mqtt.baseTopic);
+  if (config.mqtt.baseTopic[strlen(config.mqtt.baseTopic) - 1] != '/')
     relevantPartOfTopic++;
 
   bool messageHandled = false;
@@ -371,7 +449,7 @@ void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
 bool MqttStart()
 {
   //setup MQTT client (PubSubClient)
-  mqttClient.setClient(mqttEthClient).setServer(configJSON[F("MQTT")][F("hostname")].as<const char *>(), configJSON[F("MQTT")][F("port")]).setCallback(MqttCallback);
+  mqttClient.setClient(mqttEthClient).setServer(config.mqtt.hostname, config.mqtt.port).setCallback(MqttCallback);
 
   //Then connect
   if (MqttConnect())
@@ -416,14 +494,17 @@ void setup()
 
   //Load JSON from EEPROM
   Serial.println(F("[setup]Config JSON"));
-  if (ConfigReadAndParseFromEEPROM(globalBuffer, sizeof(globalBuffer)))
+  if (ConfigReadAndParseFromEEPROM(configJSON, globalBuffer, sizeof(globalBuffer)))
+  {
+    ConfigReadSystemAndMQTT(configJSON);
     Serial.println(F("[setup]Config JSON : OK\n"));
+  }
   else
     Serial.println(F("[setup]Config JSON : FAILED\n"));
 
   //Create Home Automation Objects
   Serial.println(F("[setup]HADevices"));
-  ConfigCreateHADevices();
+  ConfigCreateHADevices(configJSON);
   Serial.println(F("[setup]HADevices : Done\n"));
 
   //Start Ethernet
@@ -437,16 +518,7 @@ void setup()
   mac[4] = boot_signature_byte_get(0x16);
   mac[5] = boot_signature_byte_get(0x17);
 
-  //use global IPAddress ip
-  //look for static ip in config JSON
-  if (!configJSON[F("System")][F("ip")].isNull())
-  {
-    IPAddress tmpIP;
-    if (!ip.fromString(configJSON[F("System")][F("ip")].as<const char *>()))
-      ip[0] = ip[1] = ip[2] = ip[3] = 0;
-  }
-
-  if (EthernetConnect(mac, ip))
+  if (EthernetConnect(mac, config.system.ip))
     Serial.println(F("[setup]Ethernet : OK\n"));
   else
     Serial.println(F("[setup]Ethernet : FAILED\n"));
@@ -490,7 +562,7 @@ void loop()
   while (mqttClient.connected() && publishSucceeded && (evtToSend = eventManager.Available()))
   {
     //build complete topic in globalBuffer : baseTopic(with ending /) + topic in the event
-    strcpy(globalBuffer, configJSON[F("MQTT")][F("baseTopic")].as<const char *>());
+    strcpy(globalBuffer, config.mqtt.baseTopic);
     if (globalBuffer[strlen(globalBuffer) - 1] != '/')
       strcat_P(globalBuffer, PSTR("/"));
     strcat(globalBuffer, evtToSend->topic);
