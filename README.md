@@ -113,6 +113,7 @@ You can configure multiple devices of each type in the configuration JSON.
 
 ### Light
 
+JSON requirements :  
 |ID|Type/Size|Description|
 |--|--|--|
 |type|fixed value|Light|
@@ -120,8 +121,19 @@ You can configure multiple devices of each type in the configuration JSON.
 |pins|2 integers|array of pin numbers : [button,Light relay]|
 |pushbutton|boolean|(optional) true for push button (button with spring)|
 
+MQTT publication :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/{ID HADevice}/state|0 \| 1|0 : light is off ; 1 : light is on|
+
+MQTT subscribtion :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/{ID HADevice}/command|0 \| 1 \| t|0 : power off light ; 1 : power on light ; toggle light|
+
 ### RollerShutter
 
+JSON requirements :  
 |ID|Type/Size|Description|
 |--|--|--|
 |type|fixed value|RollerShutter|
@@ -130,29 +142,68 @@ You can configure multiple devices of each type in the configuration JSON.
 |pins|4 integers|array of pin numbers : [buttonUp,buttonDown,Direction relay,Power relay]<br>(velux type : [buttonUp,buttonDown,Roller Up relay,Roller Down relay])|
 |travelTime|integer|time in seconds for your Shutter to open completely|
 
+MQTT publication :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/{ID HADevice}/state|0->100| position of the roller shutter (%)|
+
+MQTT subscribtion :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/{ID HADevice}/command|0->100|Move the Roller Shutter to the desired position (%)|
 
 TODO : electric diagrams for normal and velux Roller Shutter
 
 ### DS18B20Bus
 
+JSON requirements :  
 |ID|Type/Size|Description|
 |--|--|--|
 |type|fixed value|Light|
 |id|16 char|unique identifier of this HADevice|
 |pin|1 integer|pin number of the OneWire bus|
 
+MQTT publication :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/temperatures/{ROMCode}/temperature|-55.00->125.00|temperature (°C)|
+
+If multiple sensors are on the Bus, all temperatures are published.  
+
 ### PilotWire
 
+JSON requirements :  
 |ID|Type/Size|Description|
 |--|--|--|
 |type|fixed value|Light|
 |id|16 char|unique identifier of this HADevice|
 |pins|2 integers|array of pin numbers : [Positive relay,Negative relay]|
 
+MQTT publication :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/{ID HADevice}/state|0->99|current Order value (0-10 : Arrêt ; 11-20 : Hors Gel ; 21-50 : Eco ; 51-99 : Confor)|
+
+MQTT subscribtion :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/{ID HADevice}/command|0->99|requested PiloteWire Order (0-10 : Arrêt ; 11-20 : Hors Gel ; 21-50 : Eco ; 51-99 : Confor)|
+
 ### DigitalOut
 
+JSON requirements :  
 |ID|Type/Size|Description|
 |--|--|--|
 |type|fixed value|Light|
 |id|16 char|unique identifier of this HADevice|
 |pin|1 integer|pin number of the output to control|
+
+MQTT publication :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/{ID HADevice}/state|0 \| 1|0 : output is off ; 1 : output is on|
+
+MQTT subscribtion :  
+|topic|data|Description|
+|--|--|--|
+|{MQTT BaseTopic}/{ID HADevice}/command|0 \| 1|0 : power off output ; 1 : power on output|
