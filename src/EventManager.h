@@ -14,7 +14,7 @@ class EventManager
     typedef struct
     {
         char topic[16 + 1 + 5 + 1]; //id(16)+/+state(longest topic for now)+0
-        char payload[7];            //21.50 (longest payload for now) (°C)
+        char payload[7];            //-10.25 (longest payload for now) (°C)
         bool sent;                  //event sent to HA or not
         byte retryLeft;             //number of retries left to send event to Home Automation
     } Event;
