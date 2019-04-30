@@ -6,7 +6,7 @@
 #include <EEPROM.h>
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
-#include <SimpleTimer.h> //!\ MAX_TIMERS = 1 /!\.
+#include "VerySimpleTimer.h"
 
 #include "WebServer.h"
 #include "EventManager.h"
@@ -78,7 +78,7 @@ WebServer webServer;
 EthernetClient mqttEthClient;
 PubSubClient mqttClient;
 bool needMqttReconnect = false;
-SimpleTimer mqttReconnectTimer;
+VerySimpleTimer mqttReconnectTimer;
 
 //---------UTILS---------
 void SoftwareReset()
@@ -505,15 +505,16 @@ void MqttRun()
   }
 
   //if MQTT not connected and reconnect timer not started
-  if (!mqttClient.connected() && !mqttReconnectTimer.isEnabled(0))
+  if (!mqttClient.connected() && !mqttReconnectTimer.IsActive())
   {
     Serial.println(F("[MQTTRun] Disconnected"));
     //set Timer to reconnect after 20 or 60 sec (Eth connected or not)
-    mqttReconnectTimer.setTimeout((Ethernet.linkStatus() != LinkOFF) ? 20000 : 60000, []() { needMqttReconnect = true; mqttReconnectTimer.deleteTimer(0); });
+    mqttReconnectTimer.SetOnceTimeout((Ethernet.linkStatus() != LinkOFF) ? 20000 : 60000);
   }
 
   //Run mqttReconnectTimer
-  mqttReconnectTimer.run();
+  if (mqttReconnectTimer.IsTimeoutOver())
+    needMqttReconnect = true;
 
   //Run mqttClient
   mqttClient.loop();
