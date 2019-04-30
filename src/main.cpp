@@ -99,7 +99,7 @@ bool ConfigReadAndParseFromEEPROM(StaticJsonDocument<GLOBAL_BUFFER_AND_JSONDOC_S
   }
   EEPROM[i] = 0;
 
-  DeserializationError jsonError = deserializeJson(configJSON, jsonBuffer);
+  DeserializationError jsonError = deserializeJson(configJSON, (const char*)jsonBuffer);
   if (jsonError)
     Serial.println(F("JSON parsing failed"));
   return !jsonError;
