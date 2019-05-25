@@ -14,13 +14,14 @@ class DigitalOut : HADevice
 {
   private:
     uint8_t _pinOut;
+    bool _invertOutput = false;
 
     void On();
     void Off();
 
   public:
     DigitalOut(JsonVariant config, EventManager *evtMgr);
-    void Init(const char *id, uint8_t pinOut, EventManager *evtMgr);
+    void Init(const char *id, uint8_t pinOut, bool invertOutput, EventManager *evtMgr);
     void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
     bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
     bool Run();

@@ -3,7 +3,7 @@
 void DigitalOut::On()
 {
 
-    digitalWrite(_pinOut, HIGH);
+    digitalWrite(_pinOut, (_invertOutput ? LOW : HIGH));
     Serial.print(F("[DigitalOut] "));
     Serial.print(_id);
     Serial.println(F(" : ON"));
@@ -11,7 +11,7 @@ void DigitalOut::On()
 }
 void DigitalOut::Off()
 {
-    digitalWrite(_pinOut, LOW);
+    digitalWrite(_pinOut, (_invertOutput ? HIGH : LOW));
     Serial.print(F("[DigitalOut] "));
     Serial.print(_id);
     Serial.println(F(" : OFF"));
@@ -27,10 +27,10 @@ DigitalOut::DigitalOut(JsonVariant config, EventManager *evtMgr)
         return;
 
     //call Init
-    Init(config["id"].as<const char *>(), config["pin"].as<uint8_t>(), evtMgr);
+    Init(config["id"].as<const char *>(), config["pin"].as<uint8_t>(), config["invert"].as<bool>(), evtMgr);
 };
 
-void DigitalOut::Init(const char *id, uint8_t pinOut, EventManager *evtMgr)
+void DigitalOut::Init(const char *id, uint8_t pinOut, bool invertOutput, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("[DigitalOut] Init("));
@@ -52,9 +52,12 @@ void DigitalOut::Init(const char *id, uint8_t pinOut, EventManager *evtMgr)
     //save pin numbers
     _pinOut = pinOut;
 
+    //save invert output
+    _invertOutput = invertOutput;
+
     //setup output
     pinMode(_pinOut, OUTPUT);
-    digitalWrite(_pinOut, LOW);
+    digitalWrite(_pinOut, (_invertOutput ? HIGH : LOW));
 
     _initialized = true;
 
