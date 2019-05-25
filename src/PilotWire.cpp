@@ -6,14 +6,14 @@ void PilotWire::SetOrder(uint8_t order)
     if (_currentOrder <= 10) //0-10 : Arrêt
     {
         //Positive half only
-        digitalWrite(_pinPos, HIGH);
-        digitalWrite(_pinNeg, LOW);
+        digitalWrite(_pinPos, (_invertOutput ? LOW : HIGH));
+        digitalWrite(_pinNeg, (_invertOutput ? HIGH : LOW));
     }
     else if (_currentOrder <= 20) //11-20 : Hors Gel
     {
         //Negative half only
-        digitalWrite(_pinPos, LOW);
-        digitalWrite(_pinNeg, HIGH);
+        digitalWrite(_pinPos, (_invertOutput ? HIGH : LOW));
+        digitalWrite(_pinNeg, (_invertOutput ? LOW : HIGH));
     }
     else if (_currentOrder <= 50) //21-30(31-40;41-50) : Eco (Confort-2; Confort-1)
     {
@@ -24,8 +24,8 @@ void PilotWire::SetOrder(uint8_t order)
     else //51-99 : Confort
     {
         //Nothing on PilotWire
-        digitalWrite(_pinPos, LOW);
-        digitalWrite(_pinNeg, LOW);
+        digitalWrite(_pinPos, (_invertOutput ? HIGH : LOW));
+        digitalWrite(_pinNeg, (_invertOutput ? HIGH : LOW));
     }
 
     Serial.print(F("[PilotWire] "));
@@ -52,9 +52,9 @@ PilotWire::PilotWire(JsonVariant config, EventManager *evtMgr)
         return;
 
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), evtMgr);
+    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["invert"].as<bool>(), evtMgr);
 };
-void PilotWire::Init(const char *id, uint8_t pinPos, uint8_t pinNeg, EventManager *evtMgr)
+void PilotWire::Init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invertOutput, EventManager *evtMgr)
 {
     Serial.print(F("[PilotWire] Init("));
     Serial.print(id);
@@ -80,11 +80,14 @@ void PilotWire::Init(const char *id, uint8_t pinPos, uint8_t pinNeg, EventManage
     _pinPos = pinPos;
     _pinNeg = pinNeg;
 
+    //save invert output
+    _invertOutput = invertOutput;
+
     //setup output
     pinMode(_pinPos, OUTPUT);
-    digitalWrite(_pinPos, LOW);
+    digitalWrite(_pinPos, (_invertOutput ? HIGH : LOW));
     pinMode(_pinNeg, OUTPUT);
-    digitalWrite(_pinNeg, LOW);
+    digitalWrite(_pinNeg, (_invertOutput ? HIGH : LOW));
 
     _initialized = true;
 

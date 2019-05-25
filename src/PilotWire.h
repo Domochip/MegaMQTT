@@ -26,12 +26,13 @@ class PilotWire : HADevice
   private:
     uint8_t _currentOrder = 51;
     uint8_t _pinPos, _pinNeg;
+    bool _invertOutput = false;
 
     void SetOrder(uint8_t order);
 
   public:
     PilotWire(JsonVariant config, EventManager *evtMgr);
-    void Init(const char *id, uint8_t pinPos, uint8_t pinNeg, EventManager *evtMgr);
+    void Init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invertOutput, EventManager *evtMgr);
     void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
     bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
     bool Run();
