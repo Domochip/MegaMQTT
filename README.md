@@ -54,7 +54,8 @@ To configure your system, you need to provide it a configuration JSON file like 
             "type": "RollerShutter",
             "id": "VR0",
             "pins": [22,23,24,25],
-            "travelTime": 30
+            "travelTime": 30,
+            "invert": true
         },
         {
             "type": "RollerShutter",
