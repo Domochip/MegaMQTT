@@ -2,24 +2,24 @@
 
 void Light::On()
 {
-    if (digitalRead(_pinLight) == LOW)
+    if (digitalRead(_pinLight) == (_invertOutput ? HIGH : LOW))
     {
-        digitalWrite(_pinLight, HIGH);
+        digitalWrite(_pinLight, (_invertOutput ? LOW : HIGH));
         _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "1");
     }
 }
 void Light::Off()
 {
-    if (digitalRead(_pinLight) == HIGH)
+    if (digitalRead(_pinLight) == (_invertOutput ? LOW : HIGH))
     {
-        digitalWrite(_pinLight, LOW);
+        digitalWrite(_pinLight, (_invertOutput ? HIGH : LOW));
         _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
     }
 }
 void Light::Toggle()
 {
     digitalWrite(_pinLight, !digitalRead(_pinLight));
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), (digitalRead(_pinLight) == LOW) ? "0" : "1");
+    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), (digitalRead(_pinLight) == (_invertOutput ? HIGH : LOW)) ? "0" : "1");
 }
 
 Light::Light(JsonVariant config, EventManager *evtMgr)
@@ -36,12 +36,11 @@ Light::Light(JsonVariant config, EventManager *evtMgr)
     if (!config["pins"][0].as<uint8_t>() || !config["pins"][1].as<uint8_t>())
         return;
 
-
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pushbutton"] | false, evtMgr);
+    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pushbutton"].as<bool>(), config["invert"].as<bool>(), evtMgr);
 }
 
-void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, EventManager *evtMgr)
+void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, bool invertOutput, EventManager *evtMgr)
 {
     Serial.print(F("[Light] Init("));
     Serial.print(id);
@@ -75,9 +74,12 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
     //save pin numbers
     _pinLight = pinLight;
 
+    //save invert output
+    _invertOutput = invertOutput;
+
     //setup output
     pinMode(_pinLight, OUTPUT);
-    digitalWrite(_pinLight, LOW);
+    digitalWrite(_pinLight, (_invertOutput ? HIGH : LOW));
 
     //save pushButtonMode
     _pushButtonMode = pushButtonMode;
