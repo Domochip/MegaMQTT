@@ -121,6 +121,7 @@ JSON requirements :
 |id|16 char|unique identifier of this HADevice|
 |pins|2 integers|array of pin numbers : [button,Light relay]|
 |pushbutton|boolean|(optional) true for push button (button with spring)|
+|invert|boolean|(optional) true to invert output|
 
 MQTT publication :  
 
@@ -145,6 +146,7 @@ JSON requirements :
 |velux|boolean|(optional) true for Velux SSL or SML RollerShutter|
 |pins|4 integers|array of pin numbers : [buttonUp,buttonDown,Direction relay,Power relay]<br>(velux type : [buttonUp,buttonDown,Roller Up relay,Roller Down relay])|
 |travelTime|integer|time in seconds for your Shutter to open completely|
+|invert|boolean|(optional) true to invert output|
 
 MQTT publication :  
 
@@ -187,6 +189,7 @@ JSON requirements :
 |type|fixed value|Light|
 |id|16 char|unique identifier of this HADevice|
 |pins|2 integers|array of pin numbers : [Positive relay,Negative relay]|
+|invert|boolean|(optional) true to invert output|
 
 MQTT publication :  
 
@@ -209,6 +212,7 @@ JSON requirements :
 |type|fixed value|Light|
 |id|16 char|unique identifier of this HADevice|
 |pin|1 integer|pin number of the output to control|
+|invert|boolean|(optional) true to invert output|
 
 MQTT publication :  
 
