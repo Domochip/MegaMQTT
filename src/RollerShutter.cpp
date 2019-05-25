@@ -9,15 +9,15 @@ void RollerShutter::GoDown()
 
     if (!_veluxType) //if normal Roller Shutter
     {
-        digitalWrite(_pinRollerDir, LOW);
+        digitalWrite(_pinRollerDir, (_invertOutput ? HIGH : LOW));
         _movementStart = millis();
-        digitalWrite(_pinRollerPower, HIGH);
+        digitalWrite(_pinRollerPower, (_invertOutput ? LOW : HIGH));
     }
     else //if Velux Roller Shutter : RollerDir=RollerUp; RollerPower=RollerDown
     {
-        digitalWrite(_pinRollerDir, LOW);
+        digitalWrite(_pinRollerDir, (_invertOutput ? HIGH : LOW));
         _movementStart = millis();
-        digitalWrite(_pinRollerPower, HIGH);
+        digitalWrite(_pinRollerPower, (_invertOutput ? LOW : HIGH));
     }
 }
 
@@ -30,15 +30,15 @@ void RollerShutter::GoUp()
 
     if (!_veluxType) //if normal Roller Shutter
     {
-        digitalWrite(_pinRollerDir, HIGH);
+        digitalWrite(_pinRollerDir, (_invertOutput ? LOW : HIGH));
         _movementStart = millis();
-        digitalWrite(_pinRollerPower, HIGH);
+        digitalWrite(_pinRollerPower, (_invertOutput ? LOW : HIGH));
     }
     else //if Velux Roller Shutter : RollerDir=RollerUp; RollerPower=RollerDown
     {
-        digitalWrite(_pinRollerPower, LOW);
+        digitalWrite(_pinRollerPower, (_invertOutput ? HIGH : LOW));
         _movementStart = millis();
-        digitalWrite(_pinRollerDir, HIGH);
+        digitalWrite(_pinRollerDir, (_invertOutput ? LOW : HIGH));
     }
 }
 
@@ -52,11 +52,11 @@ void RollerShutter::Stop()
 
     //Stop movement
     if (!_veluxType) //if normal Roller Shutter
-        digitalWrite(_pinRollerPower, LOW);
+        digitalWrite(_pinRollerPower, (_invertOutput ? HIGH : LOW));
     else //if Velux Roller Shutter : RollerDir=RollerUp; RollerPower=RollerDown
     {
-        digitalWrite(_pinRollerPower, LOW);
-        digitalWrite(_pinRollerDir, LOW);
+        digitalWrite(_pinRollerPower, (_invertOutput ? HIGH : LOW));
+        digitalWrite(_pinRollerDir, (_invertOutput ? HIGH : LOW));
     }
 
     switch (_isMoving)
@@ -106,10 +106,10 @@ RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
         return;
 
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pins"][2].as<uint8_t>(), config["pins"][3].as<uint8_t>(), config["travelTime"].as<uint8_t>(), config["velux"].as<bool>(), evtMgr);
+    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pins"][2].as<uint8_t>(), config["pins"][3].as<uint8_t>(), config["travelTime"].as<uint8_t>(), config["invert"].as<bool>(), config["velux"].as<bool>(), evtMgr);
 }
 
-void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool veluxType, EventManager *evtMgr)
+void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool invertOutput, bool veluxType, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("[RollerShutter] Init("));
@@ -156,6 +156,9 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     //save pin numbers
     _pinRollerDir = pinRollerDir;
     _pinRollerPower = pinRollerPower;
+
+    //save invert output
+    _invertOutput = invertOutput;
 
     //save veluxType
     _veluxType = veluxType;

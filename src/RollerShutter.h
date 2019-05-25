@@ -29,6 +29,7 @@ private:
   Bounce _btnUp, _btnDown;
   uint8_t _pinRollerDir, _pinRollerPower; //For Velux Roler Shutter : RollerDir=RollerUp; RollerPower=RollerDown
   uint8_t _travelTime = 0;
+  bool _invertOutput = false;
   bool _veluxType = false;
   float _currentPosition = 0.0;
 
@@ -43,7 +44,7 @@ private:
 
 public:
   RollerShutter(JsonVariant config, EventManager *evtMgr);
-  void Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool veluxType, EventManager *evtMgr);
+  void Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool invertOutput, bool veluxType, EventManager *evtMgr);
   void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
   bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
   bool Run();
