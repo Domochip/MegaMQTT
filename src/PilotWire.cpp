@@ -18,8 +18,8 @@ void PilotWire::SetOrder(uint8_t order)
     else if (_currentOrder <= 50) //21-30(31-40;41-50) : Eco (Confort-2; Confort-1)
     {
         //Full wave
-        digitalWrite(_pinPos, HIGH);
-        digitalWrite(_pinNeg, HIGH);
+        digitalWrite(_pinPos, (_invertOutput ? LOW : HIGH));
+        digitalWrite(_pinNeg, (_invertOutput ? LOW : HIGH));
     }
     else //51-99 : Confort
     {
