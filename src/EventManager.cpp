@@ -11,7 +11,7 @@ EventManager::EventManager()
     }
 }
 
-void EventManager::AddEvent(const char *topic, const char *payload)
+void EventManager::addEvent(const char *topic, const char *payload)
 {
     strncpy(_eventsList[_nextEventPos].topic, topic, sizeof(Event::topic));
     strncpy(_eventsList[_nextEventPos].payload, payload, sizeof(Event::payload));
@@ -21,7 +21,7 @@ void EventManager::AddEvent(const char *topic, const char *payload)
     _nextEventPos = (_nextEventPos + 1) % NUMBER_OF_EVENTS;
 }
 
-EventManager::Event *EventManager::Available()
+EventManager::Event *EventManager::available()
 {
     //for each events in the list starting by nextEventPos
     for (byte evPos = _nextEventPos, counter = 0; counter < NUMBER_OF_EVENTS; counter++, evPos = (evPos + 1) % NUMBER_OF_EVENTS)

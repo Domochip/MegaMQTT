@@ -38,16 +38,16 @@ private:
   Movement _isMoving = No;
   VerySimpleTimer _outputTimer;
 
-  void GoDown();
-  void GoUp();
-  void Stop();
+  void goDown();
+  void goUp();
+  void stop();
 
 public:
   RollerShutter(JsonVariant config, EventManager *evtMgr);
-  void Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool invertOutput, bool veluxType, EventManager *evtMgr);
-  void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
-  bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-  bool Run();
+  void init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool invertOutput, bool veluxType, EventManager *evtMgr);
+  void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
+  bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
+  bool run();
 };
 
 #endif

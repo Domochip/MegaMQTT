@@ -1,6 +1,6 @@
 #include "RollerShutter.h"
 
-void RollerShutter::GoDown()
+void RollerShutter::goDown()
 {
     if (!_initialized)
         return;
@@ -21,7 +21,7 @@ void RollerShutter::GoDown()
     }
 }
 
-void RollerShutter::GoUp()
+void RollerShutter::goUp()
 {
     if (!_initialized)
         return;
@@ -42,7 +42,7 @@ void RollerShutter::GoUp()
     }
 }
 
-void RollerShutter::Stop()
+void RollerShutter::stop()
 {
     if (!_initialized)
         return;
@@ -85,7 +85,7 @@ void RollerShutter::Stop()
     Serial.println('%');
 
     //Send new position through MQTT
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), String(round(_currentPosition)).c_str());
+    _evtMgr->addEvent((String(_id) + F("/state")).c_str(), String(round(_currentPosition)).c_str());
 }
 
 RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
@@ -106,10 +106,10 @@ RollerShutter::RollerShutter(JsonVariant config, EventManager *evtMgr)
         return;
 
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pins"][2].as<uint8_t>(), config["pins"][3].as<uint8_t>(), config["travelTime"].as<uint8_t>(), config["invert"].as<bool>(), config["velux"].as<bool>(), evtMgr);
+    init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pins"][2].as<uint8_t>(), config["pins"][3].as<uint8_t>(), config["travelTime"].as<uint8_t>(), config["invert"].as<bool>(), config["velux"].as<bool>(), evtMgr);
 }
 
-void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool invertOutput, bool veluxType, EventManager *evtMgr)
+void RollerShutter::init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool invertOutput, bool veluxType, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("[RollerShutter] Init("));
@@ -132,13 +132,13 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
     Serial.println(F(") -> Closing Shutter to get it ready for operation"));
 
     //Check if pins are available
-    if (!IsPinAvailable(pinBtnUp))
+    if (!isPinAvailable(pinBtnUp))
         return;
-    if (!IsPinAvailable(pinBtnDown))
+    if (!isPinAvailable(pinBtnDown))
         return;
-    if (!IsPinAvailable(pinRollerDir))
+    if (!isPinAvailable(pinRollerDir))
         return;
-    if (!IsPinAvailable(pinRollerPower))
+    if (!isPinAvailable(pinRollerPower))
         return;
 
     //save EventManager
@@ -174,12 +174,12 @@ void RollerShutter::Init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, u
 
     //Close completely the Roller to initialize position
     //Go Down
-    GoDown();
+    goDown();
     //during full travelTime, then we are Ready
-    _outputTimer.SetOnceTimeout(1000L * _travelTime);
+    _outputTimer.setOnceTimeout(1000L * _travelTime);
 }
 
-void RollerShutter::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
+void RollerShutter::mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
 {
     char *completeTopic = new char[strlen(baseTopic) + 1 + strlen(_id) + 8 + 1]; // /command
     strcpy(completeTopic, baseTopic);
@@ -191,7 +191,7 @@ void RollerShutter::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopi
     delete[] completeTopic;
 }
 
-bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
+bool RollerShutter::mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
 {
     //if relevantPartOfTopic starts with id of this device ending with '/'
     if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
@@ -225,22 +225,22 @@ bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, un
             //if roller is moving, then stop it (and then current Position will be refreshed)
             if (_isMoving != No)
             {
-                Stop();
-                _outputTimer.Stop();
+                stop();
+                _outputTimer.stop();
             }
 
             //if requested is higher than current
             if (requestedPosition > _currentPosition)
             {
                 //Go Up for the right duration
-                GoUp();
-                _outputTimer.SetTimeout(((uint16_t)_travelTime) * 10 * (((float)requestedPosition) - _currentPosition));
+                goUp();
+                _outputTimer.setTimeout(((uint16_t)_travelTime) * 10 * (((float)requestedPosition) - _currentPosition));
             }
             else
             {
                 //else Go Down for the right duration
-                GoDown();
-                _outputTimer.SetTimeout(((uint16_t)_travelTime) * 10 * (_currentPosition - requestedPosition));
+                goDown();
+                _outputTimer.setTimeout(((uint16_t)_travelTime) * 10 * (_currentPosition - requestedPosition));
             }
 
             Serial.print(F("[RollerShutter] "));
@@ -255,16 +255,16 @@ bool RollerShutter::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, un
     return false;
 }
 
-bool RollerShutter::Run()
+bool RollerShutter::run()
 {
     if (!_initialized)
         return false;
 
     if (!_ready)
     {
-        if (_outputTimer.IsTimeoutOver())
+        if (_outputTimer.isTimeoutOver())
         {
-            Stop();
+            stop();
             _ready = true;
             Serial.print(F("[RollerShutter] "));
             Serial.print(_id);
@@ -284,22 +284,22 @@ bool RollerShutter::Run()
             if (_isMoving == No)
             {
                 //Start movement
-                GoUp();
+                goUp();
                 //Start full travel time timer (even if we already are at 70%) //TODO maybe improved at a later time
-                _outputTimer.SetOnceTimeout(((uint16_t)_travelTime) * 1000);
+                _outputTimer.setOnceTimeout(((uint16_t)_travelTime) * 1000);
             }
             else //movement already in progress
             {
-                Stop();
-                _outputTimer.Stop();
+                stop();
+                _outputTimer.stop();
             }
         }
         //btnUp just released AND press where longer than threshold
         if (_btnUp.rose() && _btnUp.previousDuration() > LONGPRESS_THRESHOLD)
         {
             //then stop
-            Stop();
-            _outputTimer.Stop();
+            stop();
+            _outputTimer.stop();
         }
     }
 
@@ -313,28 +313,28 @@ bool RollerShutter::Run()
             if (_isMoving == No)
             {
                 //Start movement
-                GoDown();
+                goDown();
                 //Start full travel time timer (even if we already are at 70%) //TODO maybe improved at a later time
-                _outputTimer.SetOnceTimeout(((uint16_t)_travelTime) * 1000);
+                _outputTimer.setOnceTimeout(((uint16_t)_travelTime) * 1000);
             }
             else //movement already in progress
             {
-                Stop();
-                _outputTimer.Stop();
+                stop();
+                _outputTimer.stop();
             }
         }
         //_btnDown just released AND press where longer than threshold
         if (_btnDown.rose() && _btnDown.previousDuration() > LONGPRESS_THRESHOLD)
         {
             //then stop
-            Stop();
-            _outputTimer.Stop();
+            stop();
+            _outputTimer.stop();
         }
     }
 
     //if timer is over then Stop
-    if (_outputTimer.IsTimeoutOver())
-        Stop();
+    if (_outputTimer.isTimeoutOver())
+        stop();
 
     //if roller is moving, we need to watch closely for buttons and timer end
     return _isMoving != No;

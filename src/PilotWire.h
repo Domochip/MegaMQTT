@@ -28,14 +28,14 @@ class PilotWire : HADevice
     uint8_t _pinPos, _pinNeg;
     bool _invertOutput = false;
 
-    void SetOrder(uint8_t order);
+    void setOrder(uint8_t order);
 
   public:
     PilotWire(JsonVariant config, EventManager *evtMgr);
-    void Init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invertOutput, EventManager *evtMgr);
-    void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
-    bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-    bool Run();
+    void init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invertOutput, EventManager *evtMgr);
+    void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
+    bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
+    bool run();
 };
 
 #endif

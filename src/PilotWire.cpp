@@ -1,6 +1,6 @@
 #include "PilotWire.h"
 
-void PilotWire::SetOrder(uint8_t order)
+void PilotWire::setOrder(uint8_t order)
 {
     _currentOrder = order;
     if (_currentOrder <= 10) //0-10 : Arrêt
@@ -34,7 +34,7 @@ void PilotWire::SetOrder(uint8_t order)
     Serial.println(_currentOrder);
 
     //Publish new Order back
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), String(_currentOrder).c_str());
+    _evtMgr->addEvent((String(_id) + F("/state")).c_str(), String(_currentOrder).c_str());
 };
 
 PilotWire::PilotWire(JsonVariant config, EventManager *evtMgr)
@@ -52,9 +52,9 @@ PilotWire::PilotWire(JsonVariant config, EventManager *evtMgr)
         return;
 
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["invert"].as<bool>(), evtMgr);
+    init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["invert"].as<bool>(), evtMgr);
 };
-void PilotWire::Init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invertOutput, EventManager *evtMgr)
+void PilotWire::init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invertOutput, EventManager *evtMgr)
 {
     Serial.print(F("[PilotWire] Init("));
     Serial.print(id);
@@ -65,9 +65,9 @@ void PilotWire::Init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invert
     Serial.println(')');
 
     //Check if pins are available
-    if (!IsPinAvailable(pinPos))
+    if (!isPinAvailable(pinPos))
         return;
-    if (!IsPinAvailable(pinNeg))
+    if (!isPinAvailable(pinNeg))
         return;
 
     //save pointer to Eventmanager
@@ -92,9 +92,9 @@ void PilotWire::Init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invert
     _initialized = true;
 
     //Initialization publish
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "51");
+    _evtMgr->addEvent((String(_id) + F("/state")).c_str(), "51");
 };
-void PilotWire::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
+void PilotWire::mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
 {
     char *completeTopic = new char[strlen(baseTopic) + 1 + strlen(_id) + 8 + 1]; // /command
     strcpy(completeTopic, baseTopic);
@@ -105,7 +105,7 @@ void PilotWire::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
     mqttClient.subscribe(completeTopic);
     delete[] completeTopic;
 };
-bool PilotWire::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
+bool PilotWire::mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
 {
     //if relevantPartOfTopic starts with id of this device ending with '/'
     if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
@@ -129,14 +129,14 @@ bool PilotWire::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsign
             if (length > 1)
                 newOrder = newOrder * 10 + (payload[1] - '0');
 
-            SetOrder(newOrder);
+            setOrder(newOrder);
         }
 
         return true;
     }
     return false;
 };
-bool PilotWire::Run()
+bool PilotWire::run()
 {
     return false;
 };

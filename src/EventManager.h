@@ -10,23 +10,23 @@
 
 class EventManager
 {
-  public:
-    typedef struct
-    {
-        char topic[16 + 1 + 5 + 1]; //id(16)+/+state(longest topic for now)+0
-        char payload[7];            //-10.25 (longest payload for now) (°C)
-        bool sent;                  //event sent to HA or not
-        byte retryLeft;             //number of retries left to send event to Home Automation
-    } Event;
+public:
+  typedef struct
+  {
+    char topic[16 + 1 + 5 + 1]; //id(16)+/+state(longest topic for now)+0
+    char payload[7];            //-10.25 (longest payload for now) (°C)
+    bool sent;                  //event sent to HA or not
+    byte retryLeft;             //number of retries left to send event to Home Automation
+  } Event;
 
-  private:
-    Event _eventsList[NUMBER_OF_EVENTS]; //events list
-    byte _nextEventPos = 0;
+private:
+  Event _eventsList[NUMBER_OF_EVENTS]; //events list
+  byte _nextEventPos = 0;
 
-  public:
-    EventManager();
-    void AddEvent(const char *topic, const char *payload);
-    Event *Available();
+public:
+  EventManager();
+  void addEvent(const char *topic, const char *payload);
+  Event *available();
 };
 
 #endif

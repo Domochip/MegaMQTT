@@ -12,12 +12,12 @@ class VerySimpleTimer
     unsigned long _nextMillis = 0;
 
   public:
-    void SetOnceTimeout(uint16_t d);
-    void SetTimeout(uint16_t d);
-    void Reset();
-    void Stop();
-    bool IsTimeoutOver();
-    bool IsActive();
+    void setOnceTimeout(uint16_t d);
+    void setTimeout(uint16_t d);
+    void reset();
+    void stop();
+    bool isTimeoutOver();
+    bool isActive();
 };
 
 #endif

@@ -14,8 +14,8 @@ private:
 
 public:
   WebServer();
-  void Begin(WebServerCallbackFunc callback);
-  void Run();
+  void begin(WebServerCallbackFunc callback);
+  void run();
 };
 
 #endif

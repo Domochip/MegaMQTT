@@ -21,19 +21,19 @@ class DS18B20Bus : HADevice
     bool _convertInProgress = false;
     VerySimpleTimer _timer; //used for Convertion and Publish
 
-    boolean ReadScratchPad(byte addr[], byte data[]);
-    void WriteScratchPad(byte addr[], byte th, byte tl, byte cfg);
-    void CopyScratchPad(byte addr[]);
-    void SetupTempSensors(); //Set sensor to 12bits resolution
-    void StartConvertT();
-    void ReadAndPublishTemperatures();
+    boolean readScratchPad(byte addr[], byte data[]);
+    void writeScratchPad(byte addr[], byte th, byte tl, byte cfg);
+    void copyScratchPad(byte addr[]);
+    void setupTempSensors(); //Set sensor to 12bits resolution
+    void startConvertT();
+    void readAndPublishTemperatures();
 
   public:
     DS18B20Bus(JsonVariant config, EventManager *evtMgr);
-    void Init(const char *id, uint8_t pinOneWire, EventManager *evtMgr);
-    void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
-    bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-    bool Run();
+    void init(const char *id, uint8_t pinOneWire, EventManager *evtMgr);
+    void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
+    bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
+    bool run();
 };
 
 #endif

@@ -1,25 +1,25 @@
 #include "VerySimpleTimer.h"
 
-void VerySimpleTimer::SetOnceTimeout(uint16_t d)
+void VerySimpleTimer::setOnceTimeout(uint16_t d)
 {
     _once = true;
-    SetTimeout(d);
+    setTimeout(d);
 };
-void VerySimpleTimer::SetTimeout(uint16_t d)
+void VerySimpleTimer::setTimeout(uint16_t d)
 {
     _timeoutDuration = d;
-    Reset();
+    reset();
 };
-void VerySimpleTimer::Reset()
+void VerySimpleTimer::reset()
 {
     _nextMillis = millis() + _timeoutDuration;
     _active = true;
 };
-void VerySimpleTimer::Stop()
+void VerySimpleTimer::stop()
 {
     _active = false;
 };
-bool VerySimpleTimer::IsTimeoutOver()
+bool VerySimpleTimer::isTimeoutOver()
 {
     if (_active && millis() > _nextMillis)
     {
@@ -33,7 +33,7 @@ bool VerySimpleTimer::IsTimeoutOver()
     return false;
 };
 
-bool VerySimpleTimer::IsActive()
+bool VerySimpleTimer::isActive()
 {
     return _active;
 };

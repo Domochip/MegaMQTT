@@ -460,13 +460,13 @@ bool MqttConnect()
   {
     for (uint8_t i = 0; i < nbHADevices; i++)
       if (haDevices[i])
-        haDevices[i]->MqttSubscribe(mqttClient, config.mqtt.baseTopic);
+        haDevices[i]->mqttSubscribe(mqttClient, config.mqtt.baseTopic);
   }
 
   return mqttClient.connected();
 }
 
-void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
+void mqttCallback(char *topic, uint8_t *payload, unsigned int length)
 {
   char *relevantPartOfTopic = topic + strlen(config.mqtt.baseTopic);
   if (config.mqtt.baseTopic[strlen(config.mqtt.baseTopic) - 1] != '/')
@@ -476,13 +476,13 @@ void MqttCallback(char *topic, uint8_t *payload, unsigned int length)
 
   for (uint8_t i = 0; i < nbHADevices && !messageHandled; i++)
     if (haDevices[i])
-      messageHandled = haDevices[i]->MqttCallback(relevantPartOfTopic, payload, length);
+      messageHandled = haDevices[i]->mqttCallback(relevantPartOfTopic, payload, length);
 }
 
 bool MqttStart()
 {
   //setup MQTT client (PubSubClient)
-  mqttClient.setClient(mqttEthClient).setServer(config.mqtt.hostname, config.mqtt.port).setCallback(MqttCallback);
+  mqttClient.setClient(mqttEthClient).setServer(config.mqtt.hostname, config.mqtt.port).setCallback(mqttCallback);
 
   //Then connect
   if (MqttConnect())
@@ -505,15 +505,15 @@ void MqttRun()
   }
 
   //if MQTT not connected and reconnect timer not started
-  if (!mqttClient.connected() && !mqttReconnectTimer.IsActive())
+  if (!mqttClient.connected() && !mqttReconnectTimer.isActive())
   {
     Serial.println(F("[MQTTRun] Disconnected"));
     //set Timer to reconnect after 20 or 60 sec (Eth connected or not)
-    mqttReconnectTimer.SetOnceTimeout((Ethernet.linkStatus() != LinkOFF) ? 20000 : 60000);
+    mqttReconnectTimer.setOnceTimeout((Ethernet.linkStatus() != LinkOFF) ? 20000 : 60000);
   }
 
   //Run mqttReconnectTimer
-  if (mqttReconnectTimer.IsTimeoutOver())
+  if (mqttReconnectTimer.isTimeoutOver())
     needMqttReconnect = true;
 
   //Run mqttClient
@@ -562,7 +562,7 @@ void setup()
 
   //Start WebServer
   Serial.println(F("[setup]WebServer"));
-  webServer.Begin(WebServerCallback);
+  webServer.begin(WebServerCallback);
   Serial.println(F("[setup]WebServer : Started\n"));
 
   //Start MQTT
@@ -581,12 +581,12 @@ void loop()
   //------------------------HOME AUTOMATION------------------------
   for (uint8_t i = 0; i < nbHADevices; i++)
     if (haDevices[i])
-      timeCriticalOperationInProgress |= haDevices[i]->Run();
+      timeCriticalOperationInProgress |= haDevices[i]->run();
 
   //------------------------WEBSERVER------------------------
   //if no time critical operation is in progress, then execute WebServer operation
   if (!timeCriticalOperationInProgress)
-    webServer.Run();
+    webServer.run();
 
   //------------------------MQTT------------------------
   MqttRun();
@@ -594,7 +594,7 @@ void loop()
   EventManager::Event *evtToSend;
   bool publishSucceeded = true;
   //while MQTTconnected and publish works and there is an event to send
-  while (mqttClient.connected() && publishSucceeded && (evtToSend = eventManager.Available()))
+  while (mqttClient.connected() && publishSucceeded && (evtToSend = eventManager.available()))
   {
     //build complete topic in globalBuffer : baseTopic(with ending /) + topic in the event
     strcpy(globalBuffer, config.mqtt.baseTopic);

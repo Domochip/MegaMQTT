@@ -1,21 +1,21 @@
 #include "DigitalOut.h"
 
-void DigitalOut::On()
+void DigitalOut::on()
 {
 
     digitalWrite(_pinOut, (_invertOutput ? LOW : HIGH));
     Serial.print(F("[DigitalOut] "));
     Serial.print(_id);
     Serial.println(F(" : ON"));
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "1");
+    _evtMgr->addEvent((String(_id) + F("/state")).c_str(), "1");
 }
-void DigitalOut::Off()
+void DigitalOut::off()
 {
     digitalWrite(_pinOut, (_invertOutput ? HIGH : LOW));
     Serial.print(F("[DigitalOut] "));
     Serial.print(_id);
     Serial.println(F(" : OFF"));
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
+    _evtMgr->addEvent((String(_id) + F("/state")).c_str(), "0");
 }
 
 DigitalOut::DigitalOut(JsonVariant config, EventManager *evtMgr)
@@ -27,10 +27,10 @@ DigitalOut::DigitalOut(JsonVariant config, EventManager *evtMgr)
         return;
 
     //call Init
-    Init(config["id"].as<const char *>(), config["pin"].as<uint8_t>(), config["invert"].as<bool>(), evtMgr);
+    init(config["id"].as<const char *>(), config["pin"].as<uint8_t>(), config["invert"].as<bool>(), evtMgr);
 };
 
-void DigitalOut::Init(const char *id, uint8_t pinOut, bool invertOutput, EventManager *evtMgr)
+void DigitalOut::init(const char *id, uint8_t pinOut, bool invertOutput, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("[DigitalOut] Init("));
@@ -40,7 +40,7 @@ void DigitalOut::Init(const char *id, uint8_t pinOut, bool invertOutput, EventMa
     Serial.println(')');
 
     //Check if pin is available
-    if (!IsPinAvailable(pinOut))
+    if (!isPinAvailable(pinOut))
         return;
 
     //save EventManager
@@ -62,10 +62,10 @@ void DigitalOut::Init(const char *id, uint8_t pinOut, bool invertOutput, EventMa
     _initialized = true;
 
     //Initialization publish
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
+    _evtMgr->addEvent((String(_id) + F("/state")).c_str(), "0");
 };
 
-void DigitalOut::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
+void DigitalOut::mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
 {
     char *completeTopic = new char[strlen(baseTopic) + 1 + strlen(_id) + 8 + 1]; // /command
     strcpy(completeTopic, baseTopic);
@@ -77,7 +77,7 @@ void DigitalOut::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
     delete[] completeTopic;
 };
 
-bool DigitalOut::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
+bool DigitalOut::mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
 {
     //if relevantPartOfTopic starts with id of this device ending with '/'
     if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
@@ -91,11 +91,11 @@ bool DigitalOut::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsig
                 {
                 //0 requested
                 case '0':
-                    Off();
+                    off();
                     break;
                 //1 requested
                 case '1':
-                    On();
+                    on();
                     break;
                 }
             }
@@ -106,7 +106,7 @@ bool DigitalOut::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsig
     return false;
 };
 
-bool DigitalOut::Run()
+bool DigitalOut::run()
 {
     return false;
 };

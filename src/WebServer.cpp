@@ -5,13 +5,13 @@ WebServer::WebServer() : _webServer(80)
     _webServer.begin();
 }
 
-void WebServer::Begin(WebServerCallbackFunc callback)
+void WebServer::begin(WebServerCallbackFunc callback)
 {
     _callback = callback;
     _webServer.begin();
 };
 
-void WebServer::Run()
+void WebServer::run()
 {
     //take and check if a webClient is there
     EthernetClient webClient = _webServer.available();

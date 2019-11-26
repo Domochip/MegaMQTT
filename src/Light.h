@@ -20,16 +20,16 @@ private:
   bool _pushButtonMode = false;
   bool _invertOutput = false;
 
-  void On();
-  void Off();
-  void Toggle();
+  void on();
+  void off();
+  void toggle();
 
 public:
   Light(JsonVariant config, EventManager *evtMgr);
-  void Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, bool invertOutput, EventManager *evtMgr);
-  void MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
-  bool MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-  bool Run();
+  void init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, bool invertOutput, EventManager *evtMgr);
+  void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
+  bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
+  bool run();
 };
 
 #endif

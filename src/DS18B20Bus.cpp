@@ -2,7 +2,7 @@
 
 //-----------------------------------------------------------------------
 // DS18X20 Read ScratchPad command
-boolean DS18B20Bus::ReadScratchPad(byte addr[], byte data[])
+boolean DS18B20Bus::readScratchPad(byte addr[], byte data[])
 {
 
     boolean crcScratchPadOK = false;
@@ -29,7 +29,7 @@ boolean DS18B20Bus::ReadScratchPad(byte addr[], byte data[])
 }
 //------------------------------------------
 // DS18X20 Write ScratchPad command
-void DS18B20Bus::WriteScratchPad(byte addr[], byte th, byte tl, byte cfg)
+void DS18B20Bus::writeScratchPad(byte addr[], byte th, byte tl, byte cfg)
 {
 
     _oneWire.reset();
@@ -41,7 +41,7 @@ void DS18B20Bus::WriteScratchPad(byte addr[], byte th, byte tl, byte cfg)
 }
 //------------------------------------------
 // DS18X20 Copy ScratchPad command
-void DS18B20Bus::CopyScratchPad(byte addr[])
+void DS18B20Bus::copyScratchPad(byte addr[])
 {
 
     _oneWire.reset();
@@ -50,7 +50,7 @@ void DS18B20Bus::CopyScratchPad(byte addr[])
 }
 //------------------------------------------
 // Function to initialize DS18X20 sensors
-void DS18B20Bus::SetupTempSensors()
+void DS18B20Bus::setupTempSensors()
 {
     byte addr[8];
     byte data[9];
@@ -63,7 +63,7 @@ void DS18B20Bus::SetupTempSensors()
         if ((_oneWire.crc8(addr, 7) != addr[7]) || (addr[0] != 0x22 && addr[0] != 0x28))
             continue;
 
-        scratchPadReaded = ReadScratchPad(addr, data);
+        scratchPadReaded = readScratchPad(addr, data);
         //if scratchPad read failed then continue to next 1-Wire device
         if (!scratchPadReaded)
             continue;
@@ -73,21 +73,21 @@ void DS18B20Bus::SetupTempSensors()
         {
 
             //write ScratchPad with Th=80°C, Tl=0°C, Config 12bits resolution
-            WriteScratchPad(addr, 0x50, 0x00, 0x7F);
+            writeScratchPad(addr, 0x50, 0x00, 0x7F);
 
-            scratchPadReaded = ReadScratchPad(addr, data);
+            scratchPadReaded = readScratchPad(addr, data);
             //if scratchPad read failed then continue to next 1-Wire device
             if (!scratchPadReaded)
                 continue;
 
             //so we finally can copy scratchpad to memory
-            CopyScratchPad(addr);
+            copyScratchPad(addr);
         }
     }
 }
 //------------------------------------------
 // DS18X20 Start Temperature conversion
-void DS18B20Bus::StartConvertT()
+void DS18B20Bus::startConvertT()
 {
     _oneWire.reset();
     _oneWire.skip();
@@ -95,7 +95,7 @@ void DS18B20Bus::StartConvertT()
 }
 //------------------------------------------
 // DS18X20 Read and Publish Temperatures from all sensors
-void DS18B20Bus::ReadAndPublishTemperatures()
+void DS18B20Bus::readAndPublishTemperatures()
 {
     uint8_t nbROMCode = 0;
     byte(*romCodes)[8] = NULL;
@@ -129,7 +129,7 @@ void DS18B20Bus::ReadAndPublishTemperatures()
     for (byte i = 0; i < nbROMCode; i++)
     {
         //if read of scratchpad (3 try inside function)
-        if (!ReadScratchPad(romCodes[i], data))
+        if (!readScratchPad(romCodes[i], data))
         {
             // Convert the data to actual temperature
             // because the result is a 16 bit signed integer, it should
@@ -162,7 +162,7 @@ void DS18B20Bus::ReadAndPublishTemperatures()
             sprintf_P(romCodeA, PSTR("%02x%02x%02x%02x%02x%02x%02x%02x"), romCodes[i][0], romCodes[i][1], romCodes[i][2], romCodes[i][3], romCodes[i][4], romCodes[i][5], romCodes[i][6], romCodes[i][7]);
 
             //Send temperature through MQTT (final temperature is raw/16)
-            _evtMgr->AddEvent((String(_id) + F("/temperatures/") + romCodeA + F("/temperature")).c_str(), String((float)raw / 16.0, 2).c_str());
+            _evtMgr->addEvent((String(_id) + F("/temperatures/") + romCodeA + F("/temperature")).c_str(), String((float)raw / 16.0, 2).c_str());
         }
     }
 
@@ -181,10 +181,10 @@ DS18B20Bus::DS18B20Bus(JsonVariant config, EventManager *evtMgr) : _oneWire(-1)
         return;
 
     //call Init
-    Init(config["id"].as<const char *>(), config["pin"].as<uint8_t>(), evtMgr);
+    init(config["id"].as<const char *>(), config["pin"].as<uint8_t>(), evtMgr);
 };
 
-void DS18B20Bus::Init(const char *id, uint8_t pinOneWire, EventManager *evtMgr)
+void DS18B20Bus::init(const char *id, uint8_t pinOneWire, EventManager *evtMgr)
 {
     //DEBUG
     Serial.print(F("[DS18B20Bus] Init("));
@@ -194,7 +194,7 @@ void DS18B20Bus::Init(const char *id, uint8_t pinOneWire, EventManager *evtMgr)
     Serial.println(')');
 
     //Check if pin is available
-    if (!IsPinAvailable(pinOneWire))
+    if (!isPinAvailable(pinOneWire))
         return;
 
     //save EventManager
@@ -207,23 +207,23 @@ void DS18B20Bus::Init(const char *id, uint8_t pinOneWire, EventManager *evtMgr)
     _oneWire.begin(pinOneWire);
 
     //Initialize temperature sensors
-    SetupTempSensors();
+    setupTempSensors();
 
     _initialized = true;
 
     //start convert of temperature
-    StartConvertT();
-    _timer.SetOnceTimeout(800);
+    startConvertT();
+    _timer.setOnceTimeout(800);
 };
 
-void DS18B20Bus::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic){};
-bool DS18B20Bus::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
+void DS18B20Bus::mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic){};
+bool DS18B20Bus::mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
 {
     return false;
 };
-bool DS18B20Bus::Run()
+bool DS18B20Bus::run()
 {
-    if (_timer.IsTimeoutOver())
+    if (_timer.isTimeoutOver())
     {
         Serial.print(F("[DS18B20Bus] "));
         Serial.print(_id);
@@ -231,15 +231,15 @@ bool DS18B20Bus::Run()
         {
             Serial.println(F(" is publishing"));
             _convertInProgress = false;
-            ReadAndPublishTemperatures();
-            _timer.SetOnceTimeout((uint16_t)PUBLISH_PERIOD * 1000 - 800);
+            readAndPublishTemperatures();
+            _timer.setOnceTimeout((uint16_t)PUBLISH_PERIOD * 1000 - 800);
         }
         else
         {
             Serial.println(F(" is converting"));
             _convertInProgress = true;
-            StartConvertT();
-            _timer.SetOnceTimeout(800);
+            startConvertT();
+            _timer.setOnceTimeout(800);
         }
     }
     return false;

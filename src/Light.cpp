@@ -1,25 +1,25 @@
 #include "Light.h"
 
-void Light::On()
+void Light::on()
 {
     if (digitalRead(_pinLight) == (_invertOutput ? HIGH : LOW))
     {
         digitalWrite(_pinLight, (_invertOutput ? LOW : HIGH));
-        _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "1");
+        _evtMgr->addEvent((String(_id) + F("/state")).c_str(), "1");
     }
 }
-void Light::Off()
+void Light::off()
 {
     if (digitalRead(_pinLight) == (_invertOutput ? LOW : HIGH))
     {
         digitalWrite(_pinLight, (_invertOutput ? HIGH : LOW));
-        _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
+        _evtMgr->addEvent((String(_id) + F("/state")).c_str(), "0");
     }
 }
-void Light::Toggle()
+void Light::toggle()
 {
     digitalWrite(_pinLight, !digitalRead(_pinLight));
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), (digitalRead(_pinLight) == (_invertOutput ? HIGH : LOW)) ? "0" : "1");
+    _evtMgr->addEvent((String(_id) + F("/state")).c_str(), (digitalRead(_pinLight) == (_invertOutput ? HIGH : LOW)) ? "0" : "1");
 }
 
 Light::Light(JsonVariant config, EventManager *evtMgr)
@@ -37,10 +37,10 @@ Light::Light(JsonVariant config, EventManager *evtMgr)
         return;
 
     //call Init with parsed values
-    Init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pushbutton"].as<bool>(), config["invert"].as<bool>(), evtMgr);
+    init(config["id"].as<const char *>(), config["pins"][0].as<uint8_t>(), config["pins"][1].as<uint8_t>(), config["pushbutton"].as<bool>(), config["invert"].as<bool>(), evtMgr);
 }
 
-void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, bool invertOutput, EventManager *evtMgr)
+void Light::init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, bool invertOutput, EventManager *evtMgr)
 {
     Serial.print(F("[Light] Init("));
     Serial.print(id);
@@ -56,9 +56,9 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
     Serial.println(')');
 
     //Check if pins are available
-    if (!IsPinAvailable(pinBtn))
+    if (!isPinAvailable(pinBtn))
         return;
-    if (!IsPinAvailable(pinLight))
+    if (!isPinAvailable(pinLight))
         return;
 
     //save pointer to Eventmanager
@@ -87,9 +87,9 @@ void Light::Init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButt
     _initialized = true;
 
     //Initialization publish
-    _evtMgr->AddEvent((String(_id) + F("/state")).c_str(), "0");
+    _evtMgr->addEvent((String(_id) + F("/state")).c_str(), "0");
 }
-void Light::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
+void Light::mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
 {
     char *completeTopic = new char[strlen(baseTopic) + 1 + strlen(_id) + 8 + 1]; // /command
     strcpy(completeTopic, baseTopic);
@@ -101,7 +101,7 @@ void Light::MqttSubscribe(PubSubClient &mqttClient, const char *baseTopic)
     delete[] completeTopic;
 }
 
-bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
+bool Light::mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length)
 {
     //if relevantPartOfTopic starts with id of this device ending with '/'
     if (!strncmp(relevantPartOfTopic, _id, strlen(_id)) && relevantPartOfTopic[strlen(_id)] == '/')
@@ -115,16 +115,16 @@ bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned i
                 {
                 //OFF requested
                 case '0':
-                    Off();
+                    off();
                     break;
                 //ON requested
                 case '1':
-                    On();
+                    on();
                     break;
                 //Toggle requested
                 case 't':
                 case 'T':
-                    Toggle();
+                    toggle();
                     break;
                 }
             }
@@ -135,14 +135,14 @@ bool Light::MqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned i
     return false;
 }
 
-bool Light::Run()
+bool Light::run()
 {
     if (!_initialized)
         return false;
 
     //if button state changed AND (not a pushButton OR input rose)
     if (_btn.update() && (!_pushButtonMode || _btn.rose()))
-        Toggle(); //then invert output
+        toggle(); //then invert output
 
     //no time critical state, so always false is returned
     return false;
