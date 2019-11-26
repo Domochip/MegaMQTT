@@ -81,7 +81,7 @@ bool needMqttReconnect = false;
 VerySimpleTimer mqttReconnectTimer;
 
 //---------UTILS---------
-void SoftwareReset()
+void softwareReset()
 {
   wdt_enable(WDTO_15MS);
   while (1)
@@ -90,7 +90,7 @@ void SoftwareReset()
 }
 
 //---------CONFIG---------
-bool ConfigReadAndParseFromEEPROM(DynamicJsonDocument &configJSON, char *jsonBuffer, uint16_t jsonBufferSize)
+bool configReadAndParseFromEEPROM(DynamicJsonDocument &configJSON, char *jsonBuffer, uint16_t jsonBufferSize)
 {
   uint16_t i = 0;
   while (EEPROM[i] && i < jsonBufferSize)
@@ -106,7 +106,7 @@ bool ConfigReadAndParseFromEEPROM(DynamicJsonDocument &configJSON, char *jsonBuf
   return !jsonError;
 }
 
-void ConfigReadSystemAndMQTT(DynamicJsonDocument &configJSON)
+void configReadSystemAndMQTT(DynamicJsonDocument &configJSON)
 {
   //read System/name
   if (!configJSON[F("System")][F("name")].isNull() && strlen(configJSON[F("System")][F("name")].as<const char *>()) < sizeof(config.system.name))
@@ -166,14 +166,14 @@ void ConfigReadSystemAndMQTT(DynamicJsonDocument &configJSON)
   Serial.println(config.mqtt.baseTopic);
 }
 
-void ConfigSaveJsonToEEPROM(const char *json)
+void configSaveJsonToEEPROM(const char *json)
 {
   for (uint16_t i = 0; i < strlen(json); i++)
     EEPROM[i] = json[i];
   EEPROM[strlen(json)] = 0;
 }
 
-void ConfigCreateHADevices(DynamicJsonDocument &configJSON)
+void configCreateHADevices(DynamicJsonDocument &configJSON)
 {
   //if HADevices is in JSON and not empty
   if (!configJSON[F("HADevices")].isNull() && configJSON[F("HADevices")].size())
@@ -209,7 +209,7 @@ void ConfigCreateHADevices(DynamicJsonDocument &configJSON)
 }
 
 //---------ETHERNET---------
-bool EthernetConnect(uint8_t *mac, IPAddress &requestedIP)
+bool ethernetConnect(uint8_t *mac, IPAddress &requestedIP)
 {
   Serial.print(F("[EthernetConnect] Starting with MAC="));
   sprintf_P(globalBuffer, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -247,7 +247,7 @@ bool EthernetConnect(uint8_t *mac, IPAddress &requestedIP)
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
     Serial.println(F("[EthernetConnect] Ethernet shield not found!!! Restart..."));
-    SoftwareReset();
+    softwareReset();
   }
 
   if (Ethernet.linkStatus() == LinkOFF)
@@ -257,7 +257,7 @@ bool EthernetConnect(uint8_t *mac, IPAddress &requestedIP)
 }
 
 //---------WEBSERVER---------
-void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char *requestURI, bool isFileContentReceived, const char *fileContent)
+void webServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char *requestURI, bool isFileContentReceived, const char *fileContent)
 {
   //if GET request
   if (!isPOSTRequest)
@@ -371,7 +371,7 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
           if (n > GLOBAL_BUFFER_AND_JSONDOC_SIZE)
           {
             Serial.println(F("GlobalBufferAllocator can't go over globalBuffer size"));
-            SoftwareReset();
+            softwareReset();
           }
           return (void *)globalBuffer;
         }
@@ -395,7 +395,7 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
         Serial.println(F("[WebServerCallback] Save JSON to EEPROM"));
 
         //Save JSON to EEPROM
-        ConfigSaveJsonToEEPROM(fileContent);
+        configSaveJsonToEEPROM(fileContent);
 
         //Answer to the webClient
         webClient.println(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nJSON Config file saved"));
@@ -404,7 +404,7 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
         webClient.stop(); //close the connection
 
         Serial.println(F("[WebServerCallback] Reboot"));
-        SoftwareReset();
+        softwareReset();
       }
       else
       {
@@ -440,7 +440,7 @@ void WebServerCallback(EthernetClient &webClient, bool isPOSTRequest, const char
 
 //---------MQTT---------
 // Connect then Subscribe to MQTT
-bool MqttConnect()
+bool mqttConnect()
 {
   if (Ethernet.linkStatus() == LinkOFF)
     return false;
@@ -479,26 +479,26 @@ void mqttCallback(char *topic, uint8_t *payload, unsigned int length)
       messageHandled = haDevices[i]->mqttCallback(relevantPartOfTopic, payload, length);
 }
 
-bool MqttStart()
+bool mqttStart()
 {
   //setup MQTT client (PubSubClient)
   mqttClient.setClient(mqttEthClient).setServer(config.mqtt.hostname, config.mqtt.port).setCallback(mqttCallback);
 
   //Then connect
-  if (MqttConnect())
+  if (mqttConnect())
     return true;
 
   return false;
 }
 
-void MqttRun()
+void mqttRun()
 {
   //If MQTT need to be reconnected
   if (needMqttReconnect)
   {
     needMqttReconnect = false;
     Serial.println(F("[MQTTRun] Reconnection"));
-    if (MqttConnect())
+    if (mqttConnect())
       Serial.println(F("[MQTTRun] Reconnection : OK"));
     else
       Serial.println(F("[MQTTRun] Reconnection : Failed"));
@@ -531,9 +531,9 @@ void setup()
 
   //Load JSON from EEPROM
   Serial.println(F("[setup]Config JSON"));
-  if (ConfigReadAndParseFromEEPROM(configJSON, globalBuffer, sizeof(globalBuffer)))
+  if (configReadAndParseFromEEPROM(configJSON, globalBuffer, sizeof(globalBuffer)))
   {
-    ConfigReadSystemAndMQTT(configJSON);
+    configReadSystemAndMQTT(configJSON);
     Serial.println(F("[setup]Config JSON : OK\n"));
   }
   else
@@ -541,7 +541,7 @@ void setup()
 
   //Create Home Automation Objects
   Serial.println(F("[setup]HADevices"));
-  ConfigCreateHADevices(configJSON);
+  configCreateHADevices(configJSON);
   Serial.println(F("[setup]HADevices : Done\n"));
 
   //Start Ethernet
@@ -555,19 +555,19 @@ void setup()
   mac[4] = boot_signature_byte_get(0x16);
   mac[5] = boot_signature_byte_get(0x17);
 
-  if (EthernetConnect(mac, config.system.ip))
+  if (ethernetConnect(mac, config.system.ip))
     Serial.println(F("[setup]Ethernet : OK\n"));
   else
     Serial.println(F("[setup]Ethernet : FAILED\n"));
 
   //Start WebServer
   Serial.println(F("[setup]WebServer"));
-  webServer.begin(WebServerCallback);
+  webServer.begin(webServerCallback);
   Serial.println(F("[setup]WebServer : Started\n"));
 
   //Start MQTT
   Serial.println(F("[setup]MQTT client"));
-  if (MqttStart())
+  if (mqttStart())
     Serial.println(F("[setup]MQTT client : OK\n"));
   else
     Serial.println(F("[setup]MQTT client : FAILED\n"));
@@ -589,7 +589,7 @@ void loop()
     webServer.run();
 
   //------------------------MQTT------------------------
-  MqttRun();
+  mqttRun();
   //publish Events
   EventManager::Event *evtToSend;
   bool publishSucceeded = true;
