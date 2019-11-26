@@ -34,7 +34,7 @@
 // - allocation of a globalBuffer for general purpose (including copy of JSON from EEPROM and building HTTP answer packet to send)
 //
 //During setup(), JSON stored in EEPROM is readed into globalbuffer, then a DynamicJSON is created to parse it
-//During WebServerCallback() (a new JSON file is POSTed), the new JSON file is in heap (String) and a DynamicJSON using globalbuffer as storage is used to parse the new JSON
+//During webServerCallback() (a new JSON file is POSTed), the new JSON file is in heap (String) and a DynamicJSON using globalbuffer as storage is used to parse the new JSON
 
 #define GLOBAL_BUFFER_AND_JSONDOC_SIZE 1536 //minimum size is 1024 (web answer)
 
