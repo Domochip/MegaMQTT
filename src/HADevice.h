@@ -1,6 +1,7 @@
 #ifndef HADevice_h
 #define HADevice_h
 
+#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 
