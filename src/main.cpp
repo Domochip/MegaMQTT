@@ -584,7 +584,7 @@ void loop()
       timeCriticalOperationInProgress |= haDevices[i]->Run();
 
   //------------------------WEBSERVER------------------------
-  //if not time critical operation is in progress, then execute WebServer operation
+  //if no time critical operation is in progress, then execute WebServer operation
   if (!timeCriticalOperationInProgress)
     webServer.Run();
 
