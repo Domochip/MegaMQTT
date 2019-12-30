@@ -93,7 +93,7 @@ void softwareReset()
 bool configReadAndParseFromEEPROM(DynamicJsonDocument &configJSON, char *jsonBuffer, uint16_t jsonBufferSize)
 {
   uint16_t i = 0;
-  while (EEPROM[i] && i < jsonBufferSize)
+  while (i < jsonBufferSize && EEPROM[i])
   {
     jsonBuffer[i] = EEPROM[i];
     i++;
