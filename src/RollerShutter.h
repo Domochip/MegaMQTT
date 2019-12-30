@@ -16,7 +16,7 @@
 #define DEBOUNCE_INTERVAL 25
 #define LONGPRESS_THRESHOLD 1000
 
-class RollerShutter : HADevice
+class RollerShutter : public HADevice
 {
 private:
   enum Movement

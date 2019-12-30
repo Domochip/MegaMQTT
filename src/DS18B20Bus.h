@@ -14,7 +14,7 @@
 
 #define PUBLISH_PERIOD 60 //seconds between each convert+publish
 
-class DS18B20Bus : HADevice
+class DS18B20Bus : public HADevice
 {
   private:
     OneWire _oneWire;

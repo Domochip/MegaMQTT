@@ -12,7 +12,7 @@
 //  ID/command
 //    0,1,t,T
 
-class Light : HADevice
+class Light : public HADevice
 {
 private:
   Bounce _btn;

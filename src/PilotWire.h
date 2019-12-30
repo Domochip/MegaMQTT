@@ -21,7 +21,7 @@
 //  ID/command
 //    0->99
 
-class PilotWire : HADevice
+class PilotWire : public HADevice
 {
   private:
     uint8_t _currentOrder = 51;

@@ -10,7 +10,7 @@
 //  ID/command
 //    0,1
 
-class DigitalOut : HADevice
+class DigitalOut : public HADevice
 {
   private:
     uint8_t _pinOut;

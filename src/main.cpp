@@ -191,19 +191,19 @@ void configCreateHADevices(DynamicJsonDocument &configJSON)
     {
       //if device type is Light
       if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("Light")))
-        haDevices[i] = (HADevice *)new Light(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a Light
+        haDevices[i] = new Light(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a Light
       //if device type is RollerShutter
       else if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("RollerShutter")))
-        haDevices[i] = (HADevice *)new RollerShutter(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a RollerShutter
+        haDevices[i] = new RollerShutter(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a RollerShutter
       //if device type is DS18B20Bus
       else if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DS18B20Bus")))
-        haDevices[i] = (HADevice *)new DS18B20Bus(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DS18B20Bus
+        haDevices[i] = new DS18B20Bus(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DS18B20Bus
       //if device type is PilotWire
       else if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("PilotWire")))
-        haDevices[i] = (HADevice *)new PilotWire(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a PilotWire
+        haDevices[i] = new PilotWire(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a PilotWire
       //if device type is DigitalOut
       else if (!strcmp_P(configJSON[F("HADevices")][i][F("type")].as<const char *>(), PSTR("DigitalOut")))
-        haDevices[i] = (HADevice *)new DigitalOut(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DigitalOut
+        haDevices[i] = new DigitalOut(configJSON[F("HADevices")][i].as<JsonVariant>(), &eventManager); //create a DigitalOut
     }
   }
 }
