@@ -114,7 +114,19 @@ void DS18B20Bus::readAndPublishTemperatures()
         if (!romCodes)
             romCodes = (byte(*)[8])malloc(++nbROMCode * 8 * sizeof(byte));
         else
-            romCodes = (byte(*)[8])realloc(romCodes, ++nbROMCode * 8 * sizeof(byte));
+        {
+            //make reallocation
+            byte(*newRomCodes)[8] = (byte(*)[8])realloc(romCodes, ++nbROMCode * 8 * sizeof(byte));
+            //if reallocation is successfull
+            if (newRomCodes != NULL)
+                romCodes = newRomCodes; //update romCodes pointer
+            else
+            {
+                //otherwise reallocation failed
+                free(romCodes); //free
+                return;         //and return
+            }
+        }
 
         //copy the romCode
         for (byte i = 0; i < 8; i++)
