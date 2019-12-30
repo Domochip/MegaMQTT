@@ -27,9 +27,9 @@ private:
 public:
   Light(JsonVariant config, EventManager *evtMgr);
   void init(const char *id, uint8_t pinBtn, uint8_t pinLight, bool pushButtonMode, bool invertOutput, EventManager *evtMgr);
-  void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
-  bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-  bool run();
+  void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic) override;
+  bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length) override;
+  bool run() override;
 };
 
 #endif

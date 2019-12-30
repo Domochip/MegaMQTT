@@ -31,9 +31,9 @@ class DS18B20Bus : HADevice
   public:
     DS18B20Bus(JsonVariant config, EventManager *evtMgr);
     void init(const char *id, uint8_t pinOneWire, EventManager *evtMgr);
-    void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
-    bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-    bool run();
+    void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic) override;
+    bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length) override;
+    bool run() override;
 };
 
 #endif

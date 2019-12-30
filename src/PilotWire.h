@@ -33,9 +33,9 @@ class PilotWire : HADevice
   public:
     PilotWire(JsonVariant config, EventManager *evtMgr);
     void init(const char *id, uint8_t pinPos, uint8_t pinNeg, bool invertOutput, EventManager *evtMgr);
-    void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
-    bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-    bool run();
+    void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic) override;
+    bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length) override;
+    bool run() override;
 };
 
 #endif

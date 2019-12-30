@@ -45,9 +45,9 @@ private:
 public:
   RollerShutter(JsonVariant config, EventManager *evtMgr);
   void init(const char *id, uint8_t pinBtnUp, uint8_t pinBtnDown, uint8_t pinRollerDir, uint8_t pinRollerPower, uint8_t travelTime, bool invertOutput, bool veluxType, EventManager *evtMgr);
-  void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic);
-  bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length);
-  bool run();
+  void mqttSubscribe(PubSubClient &mqttClient, const char *baseTopic) override;
+  bool mqttCallback(char *relevantPartOfTopic, uint8_t *payload, unsigned int length) override;
+  bool run() override;
 };
 
 #endif
